@@ -31,16 +31,17 @@ public class Member {
     @Column(nullable = false, length = 100)
     private String email;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String rule;
+    private MemberRole role;
 
     //회원가입 할 때 사용할 생성자 수정시 커밋메시지
-    public Member(String name, String loginId, String password, String email, String rule){
+    public Member(String name, String loginId, String password, String email, MemberRole role){
         this.name = name;
         this.loginId = loginId;
         this.password = password;
         this.email = email;
-        this.rule = rule;
+        this.role = role;
 
 
     }
