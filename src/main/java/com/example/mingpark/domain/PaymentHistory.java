@@ -40,7 +40,7 @@ public class PaymentHistory {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    // 결제 이력을 생성할 때 사용할 생성자 (윤탱이의 Member 생성자 스타일과 통일!)
+    // 결제 이력을 생성할 때 사용할 생성자
     public PaymentHistory(Member member, Reservation reservation, int amount, String type, String status) {
         this.member = member;
         this.reservation = reservation;

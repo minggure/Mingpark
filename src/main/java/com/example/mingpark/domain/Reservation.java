@@ -1,10 +1,5 @@
 package com.example.mingpark.domain;
 
-<<<<<<< HEAD
-public class Reservation {
-
-}
-=======
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -78,6 +73,3 @@ public class Reservation {
 
 
 
-
-
->>>>>>> origin/dev
