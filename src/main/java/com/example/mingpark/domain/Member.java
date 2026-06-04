@@ -34,7 +34,7 @@ public class Member {
     @Column(nullable = false, length = 20)
     private String rule;
 
-    //회원가입 할 때 사용할 생성자
+    //회원가입 할 때 사용할 생성자 수정시 커밋메시지
     public Member(String name, String loginId, String password, String email, String rule){
         this.name = name;
         this.loginId = loginId;
