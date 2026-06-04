@@ -9,44 +9,46 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "payment_history")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA 기본 규격 유지
+@NoArgsConstructor(access = AccessLevel.PROTECTED) // 무분별한 객체 생성 방지
 public class PaymentHistory {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "payment_history_id") // 고유 PK ID
+    @Id // PK
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // AutoIncrement 설정
+    @Column(name = "payment_history_id")
     private Long id;
 
     // 👤 [회원 ➡️ 결제이력] 1:N 비식별 관계
-    // 윤탱이가 만든 Member 엔티티와 연관 관계를 맺어주는 부분이야!
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    // 🎫 [예매 ➡️ 결제이력] 1:N 비식별 관계 (영수증 연결고리)
+    // 🎫 [예매 ➡️ 결제이력] 1:N 비식별 관계
+    // TODO: 다른 팀원이 예매(Reservation) 엔티티 완성하면 이 부분 패키지 경로 및 조율 필요!
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reservation_id", nullable = false)
     private Reservation reservation;
 
     @Column(nullable = false)
-    private int amount; // 변동 금액 (-60000, +60000 등)
+    private int amount; // 변동된 포인트 (예: -60000, +60000)
 
-    @Column(nullable = false, length = 50)
-    private String type; // PAYMENT(결제), REFUND(환불)
+    @Enumerated(EnumType.STRING) // DB에 문자열(PAYMENT, REFUND)로 저장되도록 설정
+    @Column(nullable = false, length = 20)
+    private PaymentType type; // 결제 타입 (Enum)
 
-    @Column(nullable = false, length = 50)
-    private String status; // SUCCESS, FAILED
+    @Enumerated(EnumType.STRING) // DB에 문자열(SUCCESS, FAILED)로 저장되도록 설정
+    @Column(nullable = false, length = 20)
+    private PaymentStatus status; // 결제 상태 (Enum)
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt; // 처리 일시
 
-    // 결제 이력을 생성할 때 사용할 생성자
-    public PaymentHistory(Member member, Reservation reservation, int amount, String type, String status) {
+    //생성자
+    public PaymentHistory(Member member, Reservation reservation, int amount, PaymentType type, PaymentStatus status) {
         this.member = member;
         this.reservation = reservation;
         this.amount = amount;
         this.type = type;
         this.status = status;
-        this.createdAt = LocalDateTime.now(); // 생성될 때 현재 시간이 자동으로 기록됨!
+        this.createdAt = LocalDateTime.now(); // 생성되는 순간의 시간이 자동으로 기록됨!
     }
 }
