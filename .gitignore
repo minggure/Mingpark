@@ -32,4 +32,5 @@ build/
 ### VS Code ###
 .vscode/
 
+### Spring local config ###
 /src/main/resources/application.properties
