@@ -8,6 +8,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Getter
+
+// 화면에 보여줄 5가지 클래스를 불러옴
 public class ConcertResponseDto {
     private Long concertId;
     private String concertTitle;
@@ -16,7 +18,7 @@ public class ConcertResponseDto {
     private LocalDate concertDate;
     private int concertPrice;
 
-
+// DB 에서 받아온 값을 넣어주는 작업
     public ConcertResponseDto(Concert concert) {
         this.concertId = concert.getConcertId();
         this.concertTitle = concert.getConcertTitle();
