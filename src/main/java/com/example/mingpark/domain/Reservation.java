@@ -18,17 +18,17 @@ public class Reservation {
     @Column(name = "reservation_id")
     private Long id;
 
-    // 🔗 FK 1: 회원 (N:1 관계)
+    //  FK 1: 회원 (N:1 관계)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    // 🔗 FK 2: 공연 (N:1 관계)
+    //  FK 2: 공연 (N:1 관계)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "concert_id", nullable = false)
     private Concert concert;
 
-    // 🔗 FK 3: 좌석 (N:1 관계)
+    //  FK 3: 좌석 (N:1 관계)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seat_id", nullable = false)
     private Seat seat;
