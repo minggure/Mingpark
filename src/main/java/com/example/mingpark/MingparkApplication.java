@@ -10,5 +10,4 @@ public class MingparkApplication {
     public static void main(String[] args) {
         SpringApplication.run(MingparkApplication.class, args);
     }
-
 }
