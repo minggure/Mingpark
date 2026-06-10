@@ -5,7 +5,7 @@ import com.example.mingpark.dto.MemberSignupRequestDto;
 
 import com.example.mingpark.domain.Member;
 import com.example.mingpark.dto.LoginRequestDto;
-import com.example.mingpark.dto.MemberSignupRequest;
+import com.example.mingpark.dto.MemberSignupRequestDto;
 
 import com.example.mingpark.service.MemberService;
 import jakarta.validation.Valid;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
 @RequiredArgsConstructor
