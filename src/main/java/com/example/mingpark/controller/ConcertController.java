@@ -15,7 +15,6 @@ public class ConcertController {
     private final ConcertService concertService;
 
     @GetMapping("/api/concerts")
-    public List<ConcertResponseDto> getConcerts() {
-        return concertService.getAllConcerts();
+    public List<ConcertResponseDto> getConcerts() {return concertService.getAllConcerts();
     }
 }
