@@ -96,3 +96,20 @@
 
 </body>
 </html>
+<script>
+    // 페이지가 로드될 때 주소창의 파라미터를 확인하는 자바스크립트야!
+    window.onload = function() {
+        const urlParams = new URLSearchParams(window.location.search);
+
+        // 1. 로그인 성공 메시지 팝업
+        if (urlParams.get('success') === 'true') {
+            alert('로그인 성공! 환영합니다!');
+            // 알림창 확인 누른 후 주소창 깔끔하게 정리하고 싶다면 메인페이지(구현예정)나 특정 주소로 이동시켜도 돼!
+        }
+
+        // 2. 로그인 실패 메시지 팝업 (보너스!)
+        if (urlParams.get('error') === 'failed') {
+            alert('로그인 실패! 아이디 또는 비밀번호를 확인해주세요.');
+        }
+    };
+</script>
