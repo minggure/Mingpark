@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Ming Park - 공연 목록</title>
+    <style>
+
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background-color: #f5f6f7;
+            margin: 0;
+            padding: 50px 20px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #333;
+            font-size: 28px;
+        }
+
+        #concert-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+
+        .concert-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 300px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        /
+        .concert-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .concert-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .concert-info {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+            text-align: left;
+            line-height: 1.5;
+        }
+
+        .concert-price {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            text-align: right;
+        }
+
+
+        .book-button {
+            width: 100%;
+            padding: 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: bold;
+            text-align: center;
+            transition: background-color 0.2s;
+        }
+
+        .book-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Ming Park 공연 목록</h2>
+
+<div id="concert-container">
+</div>
+
+<script>
+
+    fetch('/api/concerts')
+        .then(response => response.json())
+        .then(concerts => {
+            const container = document.getElementById('concert-container');
+
+            // 가져온 공연 데이터만큼 반복문 돌리기
+            concerts.forEach(concert => {
+                const card = document.createElement('div');
+                card.className = 'concert-card';
+
+
+                card.innerHTML = `
+                    <div>
+                        <div class="concert-title">${concert.concertTitle}</div>
+                        <div class="concert-info">📍 장소 : ${concert.place}</div>
+                        <div class="concert-info">📅 날짜 : ${concert.concertDate}</div>
+                        <div class="concert-info">⏰ 시간 : ${concert.concertTime}</div>
+                    </div>
+                    <div>
+                        <div class="concert-price">₩ ${concert.concertPrice.toLocaleString()}</div>
+                        <button class="book-button" onclick="location.href='/login.html'">예매하기</button>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        })
+        .catch(error => console.error('공연 데이터를 불러오는 중 에러 발생:', error));
+</script>
+
+</body>
+</html>
