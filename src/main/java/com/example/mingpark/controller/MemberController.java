@@ -51,16 +51,13 @@ public class MemberController {
 
         // 로그인 실패 시 ➡️ 다시 static/login.html로
         if (loginMember == null) {
-            System.out.println("🚨 로그인 실패! 아이디나 비번이 틀렸어!");
-            return "redirect:/login.html"; //
+            return "redirect:/login.html?error=failed";
         }
 
         // 로그인 성공 시 ➡️ 세션 저장
         jakarta.servlet.http.HttpSession session = request.getSession();
         session.setAttribute("loginMember", loginMember);
 
-        System.out.println("🚀 로그인 성공!!! 환영합니다, " + loginMember.getName() + "님!");
-
-        return "redirect:/login.html";
+        return "redirect:/login.html?success=true";
     }
 }
