@@ -49,12 +49,12 @@ public class MemberController {
 
         Member loginMember = memberService.login(loginDto);
 
-        // 로그인 실패 시 ➡️ 다시 static/login.html로
+        // 로그인 실패 시 다시 static/login.html로
         if (loginMember == null) {
             return "redirect:/login.html?error=failed";
         }
 
-        // 로그인 성공 시 ➡️ 세션 저장
+        // 로그인 성공 시 세션 저장
         jakarta.servlet.http.HttpSession session = request.getSession();
         session.setAttribute("loginMember", loginMember);
 
