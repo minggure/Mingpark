@@ -19,13 +19,21 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
         .navbar-brand {
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
+            display: flex;
+            align-items: center;
             cursor: pointer;
+        }
+
+        .brand-logo {
+            display: block;
+            width: 210px;
+            height: auto;
         }
 
         .auth-area {
@@ -159,7 +167,9 @@
 <body>
 
 <nav class="navbar">
-    <div class="navbar-brand" onclick="location.reload()">Ming Park</div>
+    <a class="navbar-brand" href="/main.html" aria-label="Ming Park 메인으로 이동">
+        <img class="brand-logo" src="/images/mingpark-logo.png" alt="Ming Park">
+    </a>
     <div class="auth-area" id="navbar-auth">
     </div>
 </nav>

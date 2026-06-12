@@ -26,10 +26,15 @@
         }
 
         .navbar-brand {
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
+            display: flex;
+            align-items: center;
             cursor: pointer;
+        }
+
+        .brand-logo {
+            display: block;
+            width: 210px;
+            height: auto;
         }
 
         .auth-area {
@@ -82,21 +87,30 @@
         }
 
         .concert-card {
+            display: block;
             background: white;
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             width: 300px;
             box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
             transition: transform 0.2s, box-shadow 0.2s;
+            color: inherit;
+            text-decoration: none;
+            cursor: pointer;
         }
 
         .concert-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .concert-image {
+            width: 100%;
+            height: 340px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-bottom: 15px;
         }
 
         .concert-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #222; }
@@ -177,7 +191,9 @@
 <body>
 
 <div class="navbar">
-    <div class="navbar-brand" onclick="location.href='/'">🎤 Ming Park</div>
+    <a class="navbar-brand" href="/main.html" aria-label="Ming Park 메인으로 이동">
+        <img class="brand-logo" src="/images/mingpark-logo.png" alt="Ming Park">
+    </a>
     <div class="auth-area" id="auth-area">
     </div>
 </div>
@@ -329,12 +345,15 @@
                 container.innerHTML = ''; // 이전 목록 청소
 
                 data.content.forEach(concert => {
-                    const card = document.createElement('div');
+                    // 카드 전체를 링크로 만들어 어느 영역을 눌러도 공연 ID 기반 상세 페이지로 이동한다.
+                    const card = document.createElement('a');
                     card.className = 'concert-card';
+                    card.href = `/concerts/${concert.concertId}`;
                     card.innerHTML = `
                         <div>
+                            <img class="concert-image" src="${concert.image}" alt="${concert.concertTitle}">
                             <div class="concert-title">${concert.concertTitle}</div>
-                            <div class="concert-info">📍 장소: ${concert.place}</div>
+                            <div class="concert-info">📍 장소: ${concert.place || '추후 공지'}</div>
                             <div class="concert-info">📅 날짜: ${concert.concertDate}</div>
                             <div class="concert-info">⏰ 시간: ${concert.concertTime}</div>
                         </div>
