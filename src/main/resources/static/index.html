@@ -87,49 +87,120 @@
             text-align: center;
             transition: background-color 0.2s;
         }
+        .create-button {
+            display: block;
+            margin-left: 1200px;
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: bold;
+            text-align: center;
+            transition: background-color 0.2s;
+        }
 
         .book-button:hover {
             background-color: #45a049;
+        }
+
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 40px;
         }
     </style>
 </head>
 <body>
 
 <h2>Ming Park 공연 목록</h2>
-
+<button class="create-button" onclick="location.href='/register.html'">공연 등록</button>
 <div id="concert-container">
 </div>
 
 <script>
 
-    fetch('/api/concerts')
-        .then(response => response.json())
-        .then(concerts => {
-            const container = document.getElementById('concert-container');
+    let currentPage = 0; // 현재 보고 있는 페이지 번호 (0부터 시작)
+    const pageSize = 6;  // 한 페이지에 6개씩 끊어서 보기
 
-            // 가져온 공연 데이터만큼 반복문 돌리기
-            concerts.forEach(concert => {
-                const card = document.createElement('div');
-                card.className = 'concert-card';
+    // 페이지를 불러오는 핵심 함수
+    function loadConcerts(page) {
+        currentPage = page;
 
+        // 주소 뒤에 page와 size 파라미터를 붙여서 호출!
+        fetch(`/api/concerts?page=${page}&size=${pageSize}`)
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('concert-container');
+                container.innerHTML = ''; // 기존에 그려진 카드 싹 지우기
 
-                card.innerHTML = `
-                    <div>
-                        <div class="concert-title">${concert.concertTitle}</div>
-                        <div class="concert-info">📍 장소 : ${concert.place}</div>
-                        <div class="concert-info">📅 날짜 : ${concert.concertDate}</div>
-                        <div class="concert-info">⏰ 시간 : ${concert.concertTime}</div>
-                    </div>
-                    <div>
-                        <div class="concert-price">₩ ${concert.concertPrice.toLocaleString()}</div>
-                        <button class="book-button" onclick="location.href='/login.html'">예매하기</button>
-                    </div>
-                `;
+                // 💡 중요: 데이터가 리스트가 아니라 객체라서 data.content를 돌려야 함!
+                const concerts = data.content;
 
-                container.appendChild(card);
-            });
-        })
-        .catch(error => console.error('공연 데이터를 불러오는 중 에러 발생:', error));
+                concerts.forEach(concert => {
+                    const card = document.createElement('div');
+                    card.className = 'concert-card';
+
+                    card.innerHTML = `
+                        <div>
+                            <div class="concert-title">${concert.concertTitle}</div>
+                            <div class="concert-info">📍 장소 : ${concert.place || '추후 공지'}</div>
+                            <div class="concert-info">📅 날짜 : ${concert.concertDate}</div>
+                            <div class="concert-info">⏰ 시간 : ${concert.concertTime}</div>
+                        </div>
+                        <div>
+                            <div class="concert-price">₩ ${concert.concertPrice.toLocaleString()}</div>
+                            <button class="book-button" onclick="location.href='/login.html'">예매하기</button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+
+                // 하단 페이지 번호 버튼 그리기 함수 호출
+                renderPagination(data.totalPages);
+            })
+            .catch(error => console.error('에러 발생:', error));
+    }
+
+    // 하단 번호 버튼 [1] [2] [3] 만드는 로직
+    function renderPagination(totalPages) {
+        const pageContainer = document.getElementById('pagination');
+        pageContainer.innerHTML = ''; // 기존 버튼 지우기
+
+        // 총 페이지가 1개 이하면 페이징 버튼 안 그리기
+        if (totalPages <= 1) return;
+
+        // [이전] 버튼
+        const prevBtn = document.createElement('button');
+        prevBtn.className = 'page-btn';
+        prevBtn.innerText = '이전';
+        prevBtn.disabled = currentPage === 0;
+        prevBtn.onclick = () => loadConcerts(currentPage - 1);
+        pageContainer.appendChild(prevBtn);
+
+        // 숫자 버튼들 (스프링은 0부터 시작하지만 화면엔 1부터 보여줌)
+        for (let i = 0; i < totalPages; i++) {
+            const btn = document.createElement('button');
+            btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+            btn.innerText = i + 1;
+            btn.onclick = () => loadConcerts(i);
+            pageContainer.appendChild(btn);
+        }
+
+        // [다음] 버튼
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'page-btn';
+        nextBtn.innerText = '다음';
+        nextBtn.disabled = currentPage === totalPages - 1;
+        nextBtn.onclick = () => loadConcerts(currentPage + 1);
+        pageContainer.appendChild(nextBtn);
+    }
+
+    // 처음에 메인 화면 켜지자마자 0번째 페이지 불러오기 실행!
+    loadConcerts(0);
 </script>
 
 </body>
