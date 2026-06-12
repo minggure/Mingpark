@@ -24,7 +24,7 @@ public class Concert {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "concert_id")
-    private Long id;
+    private Long concertId;
 
     @Column(name = "concert_title", nullable = false)
     private String concertTitle;
@@ -40,6 +40,7 @@ public class Concert {
 
     @Column(name = "concert_price", nullable = false)
     private int concertPrice;
+
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
