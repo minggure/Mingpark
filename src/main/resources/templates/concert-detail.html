@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="|${concert.concertTitle} - Ming Park|">공연 상세 - Ming Park</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 90px 20px 50px;
+            background-color: #f5f6f7;
+            color: #333;
+            font-family: 'Malgun Gothic', sans-serif;
+        }
+
+        .home-logo {
+            position: fixed;
+            top: 18px;
+            left: 28px;
+            z-index: 100;
+        }
+
+        .home-logo img {
+            display: block;
+            width: 210px;
+            height: auto;
+        }
+
+        .detail-container {
+            display: grid;
+            grid-template-columns: minmax(260px, 380px) 1fr;
+            gap: 50px;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .poster { width: 100%; border-radius: 8px; }
+        .concert-title { margin-top: 0; font-size: 32px; }
+
+        .description {
+            margin: 28px 0;
+            color: #555;
+            line-height: 1.8;
+            white-space: pre-line;
+        }
+
+        .info-row {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            padding: 13px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .info-label { font-weight: bold; }
+        .actions { display: flex; gap: 12px; margin-top: 32px; }
+
+        .button {
+            padding: 13px 24px;
+            border: 0;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: bold;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .back-button { background-color: #e9ecef; color: #333; }
+        .reservation-button { background-color: #4CAF50; color: white; }
+        .reservation-button:disabled { background-color: #aaa; cursor: not-allowed; }
+
+        @media (max-width: 760px) {
+            .detail-container { grid-template-columns: 1fr; padding: 24px; }
+        }
+    </style>
+</head>
+<body>
+
+<a class="home-logo" href="/main.html" aria-label="Ming Park 메인으로 이동">
+    <img src="/images/mingpark-logo.png" alt="Ming Park">
+</a>
+
+<!-- Controller가 Model에 "concert"라는 이름으로 전달한 상세 DTO를 출력한다. -->
+<main class="detail-container">
+    <section>
+        <img class="poster" th:src="${concert.image}" th:alt="${concert.concertTitle}">
+    </section>
+
+    <section>
+        <h1 class="concert-title" th:text="${concert.concertTitle}">공연명</h1>
+        <p class="description"
+           th:text="${concert.description != null ? concert.description : '등록된 공연 설명이 없습니다.'}">
+            공연 설명
+        </p>
+
+        <div class="info-row">
+            <span class="info-label">장소</span>
+            <span th:text="${concert.place != null ? concert.place : '장소 미정'}">장소</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">공연 일정</span>
+            <span th:text="|${concert.concertDate} ${concert.concertTime}|">공연 일정</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">가격</span>
+            <span th:text="|${#numbers.formatInteger(concert.concertPrice, 1, 'COMMA')}원|">가격</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">예매 가능 기간</span>
+            <span th:if="${concert.reservationStartAt != null and concert.reservationEndAt != null}"
+                  th:text="|${#temporals.format(concert.reservationStartAt, 'yyyy-MM-dd HH:mm')} ~ ${#temporals.format(concert.reservationEndAt, 'yyyy-MM-dd HH:mm')}|">
+                예매 가능 기간
+            </span>
+            <span th:unless="${concert.reservationStartAt != null and concert.reservationEndAt != null}">
+                예매 기간 미정
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">예매 가능 여부</span>
+            <!-- reservationAvailable은 공연 상태와 현재 예매 기간을 기준으로 서버에서 계산한다. -->
+            <span th:text="${concert.reservationAvailable ? '예매 가능' : '예매 불가'}">예매 가능 여부</span>
+        </div>
+
+        <!-- 예매 가능 여부에 따라 버튼을 활성화하거나 비활성화한다. -->
+        <div class="actions">
+            <a class="button back-button" href="/">목록으로</a>
+            <button class="button reservation-button"
+                    th:if="${concert.reservationAvailable}">
+                예매하기
+            </button>
+            <button class="button reservation-button"
+                    th:unless="${concert.reservationAvailable}"
+                    disabled>
+                예매 불가
+            </button>
+        </div>
+    </section>
+</main>
+
+</body>
+</html>

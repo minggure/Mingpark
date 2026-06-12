@@ -11,6 +11,7 @@ import jakarta.persistence.Table;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Builder
@@ -41,9 +42,22 @@ public class Concert {
     @Column(name = "concert_price", nullable = false)
     private int concertPrice;
 
+    // 상세 페이지에서 보여줄 공연 소개와 장소
+    @Column(name = "description", length = 2000)
+    private String description;
 
+    @Column(name = "place")
+    private String place;
+
+    // 예매 버튼 활성화 여부를 판단할 때 사용하는 예매 가능 기간
+    @Column(name = "reservation_start_at")
+    private LocalDateTime reservationStartAt;
+
+    @Column(name = "reservation_end_at")
+    private LocalDateTime reservationEndAt;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
+    @Builder.Default
     private ConcertStatus status = ConcertStatus.UPCOMING;
 
     public Concert(String concertTitle, String image, LocalTime concertTime, LocalDate concertDate, int concertPrice) {
@@ -67,5 +81,20 @@ public class Concert {
 
     public void changeStatus(ConcertStatus status) {
         this.status = status;
+    }
+
+    /**
+     * 공연 상태와 예매 기간을 함께 확인해 현재 예매 가능한 공연인지 판단한다.
+     * 예매 기간이 등록되지 않은 기존 공연은 예매 불가능으로 처리한다.
+     */
+    public boolean isReservationAvailable() {
+        if (status != ConcertStatus.ON_SALE
+                || reservationStartAt == null
+                || reservationEndAt == null) {
+            return false;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        return !now.isBefore(reservationStartAt) && !now.isAfter(reservationEndAt);
     }
 }

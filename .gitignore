@@ -35,3 +35,6 @@ build/
 
 ### Spring local config ###
 /src/main/resources/application-local.properties
+
+### Runtime uploads ###
+/uploads/

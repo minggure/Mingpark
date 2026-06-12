@@ -9,20 +9,22 @@ import java.time.LocalTime;
 
 @Getter
 
-// 화면에 보여줄 5가지 클래스를 불러옴
+// 공연 목록 카드에 필요한 요약 정보만 전달한다.
 public class ConcertResponseDto {
     private Long concertId;
     private String concertTitle;
     private String image;
+    private String place;
     private LocalTime concertTime;
     private LocalDate concertDate;
     private int concertPrice;
 
-// DB 에서 받아온 값을 넣어주는 작업
+    // Concert 엔티티를 목록 화면용 응답으로 변환한다.
     public ConcertResponseDto(Concert concert) {
         this.concertId = concert.getConcertId();
         this.concertTitle = concert.getConcertTitle();
         this.image = concert.getImage();
+        this.place = concert.getPlace();
         this.concertPrice = concert.getConcertPrice();
         this.concertTime = concert.getConcertTime();
         this.concertDate = concert.getConcertDate();

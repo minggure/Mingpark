@@ -48,8 +48,8 @@ public class MemberService {
         Member member = findMemberOptional.get();
 
         // 비밀번호 검사 (틀리면 로그인 실패)
-        if (!member.getPassword().equals(loginDto.getPassword())) {
-            return null;
+        if (!passwordEncoder.matches(loginDto.getPassword(), member.getPassword())) {
+            return null; // 비밀번호가 일치하지 않으면 바로 컷!
         }
         // 성공하면 회원 정보 반환
         return member;
