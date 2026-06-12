@@ -1,92 +1,16 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <title>Ming Park - 로그인</title>
-    <style>
-        /* 화면 정중앙에 깔끔하게 배치하기 위한 스타일 */
-        body {
-            font-family: 'Malgun Gothic', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f5f6f7;
-            margin: 0;
-        }
-        .login-box {
-            background: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            width: 320px;
-            text-align: center;
-        }
-        h2 {
-            margin-bottom: 25px;
-            color: #333;
-        }
-        .input-group {
-            margin-bottom: 15px;
-        }
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 14px;
-        }
-        input:focus {
-            border-color: #4CAF50;
-            outline: none;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            margin-top: 10px;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        .signup-link {
-            margin-top: 20px;
-            font-size: 13px;
-            color: #666;
-        }
-        .signup-link a {
-            color: #4CAF50;
-            text-decoration: none;
-            font-weight: bold;
-        }
-    </style>
-</head>
-
-
-<body>
-
 <div class="login-box">
     <h2>Ming Park 로그인</h2>
 
-    <form action="/members/login" method="post">
-
+    <form id="loginForm">
         <div class="input-group">
-            <input type="text" name="loginId" placeholder="아이디를 입력하세요" required>
+            <input id="loginId" type="text" name="loginId" placeholder="아이디를 입력하세요" required>
         </div>
 
         <div class="input-group">
-            <input type="password" name="password" placeholder="비밀번호를 입력하세요" required>
+            <input id="password" type="password" name="password" placeholder="비밀번호를 입력하세요" required>
         </div>
 
         <button type="submit">로그인</button>
-
     </form>
 
     <div class="signup-link">
@@ -94,22 +18,36 @@
     </div>
 </div>
 
-</body>
-</html>
 <script>
-    // 페이지가 로드될 때 주소창의 파라미터를 확인하는 자바스크립트야!
-    window.onload = function() {
-        const urlParams = new URLSearchParams(window.location.search);
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault(); // 페이지 전환 방지
 
-        // 1. 로그인 성공 메시지 팝업
-        if (urlParams.get('success') === 'true') {
-            alert('로그인 성공! 환영합니다!');
-            // 알림창 확인 누른 후 주소창 깔끔하게 정리하고 싶다면 메인페이지(구현예정)나 특정 주소로 이동시켜도 돼!
-        }
+        final data = {
+            loginId: document.getElementById('loginId').value,
+            password: document.getElementById('password').value
+        };
 
-        // 2. 로그인 실패 메시지 팝업 (보너스!)
-        if (urlParams.get('error') === 'failed') {
-            alert('로그인 실패! 아이디 또는 비밀번호를 확인해주세요.');
-        }
-    };
+        // 🌟 수정된 로그인 API 주소 적용!
+        fetch('/api/v1/members/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => {
+                if (!response.ok) throw new Error('로그인 실패');
+                return response.json();
+            })
+            .then(result => {
+                if (result.status === 'success') {
+                    alert(result.memberName + '님, 환영합니다!');
+                    window.location.href = '/index.html'; // 메인 페이지로 부드럽게 이동
+                }
+            })
+            .catch(error => {
+                alert('로그인에 실패했습니다. 아이디와 비밀번호를 확인해 주세요.');
+                console.error('Error:', error);
+            });
+    });
 </script>
