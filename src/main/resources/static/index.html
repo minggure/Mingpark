@@ -99,19 +99,15 @@
 
 <div id="concert-container">
 </div>
-
 <script>
-
-    fetch('/api/concerts')
+    fetch('/api/v1/concerts')
         .then(response => response.json())
         .then(concerts => {
-            const container = document.getElementById('concert-container');
+            final container = document.getElementById('concert-container');
 
-            // 가져온 공연 데이터만큼 반복문 돌리기
             concerts.forEach(concert => {
-                const card = document.createElement('div');
+                final card = document.createElement('div');
                 card.className = 'concert-card';
-
 
                 card.innerHTML = `
                     <div>
@@ -125,12 +121,10 @@
                         <button class="book-button" onclick="location.href='/login.html'">예매하기</button>
                     </div>
                 `;
-
                 container.appendChild(card);
             });
         })
-        .catch(error => console.error('공연 데이터를 불러오는 중 에러 발생:', error));
+        .catch(error => console.error('공연 목록 로드 실패:', error));
 </script>
-
 </body>
 </html>
