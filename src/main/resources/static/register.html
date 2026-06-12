@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Ming Park - 공연 등록</title>
+    <style>
+        /* 밍파크 시그니처 패밀리룩 디자인 완벽 적용! */
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f5f6f7;
+            margin: 0;
+        }
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 350px;
+            text-align: center;
+        }
+        h2 {
+            margin-bottom: 25px;
+            color: #333;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        /* 입력창 클릭 시 테두리도 연두색으로! */
+        input:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        /* 밍파크 메인 연두색 버튼 */
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+            transition: background-color 0.2s;
+        }
+        .submit-btn:hover {
+            background-color: #45a049;
+        }
+
+        /* 깔끔한 취소(뒤로가기) 버튼 */
+        .cancel-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #e0e0e0;
+            color: #333;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+            transition: background-color 0.2s;
+        }
+        .cancel-btn:hover {
+            background-color: #d5d5d5;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-box">
+    <h2>🎤 새 공연 등록</h2>
+
+    <div class="input-group">
+        <input type="text" id="title" placeholder="공연 제목 (예: 2026 아이유 콘서트)" required>
+    </div>
+    <div class="input-group">
+        <input type="text" id="place" placeholder="공연 장소 (예: 잠실 주경기장)" required>
+    </div>
+    <div class="input-group">
+        <input type="date" id="date" required>
+    </div>
+    <div class="input-group">
+        <input type="time" id="time" required>
+    </div>
+    <div class="input-group">
+        <input type="number" id="price" placeholder="티켓 가격 (숫자만 입력)" required>
+    </div>
+    <div class="input-group">
+        <input type="text" id="image" placeholder="이미지 파일명 (예: iu.jpg)" required>
+    </div>
+
+    <button class="submit-btn" onclick="submitConcert()">등록하기</button>
+    <button class="cancel-btn" onclick="location.href='/'">취소</button>
+</div>
+
+<script>
+    // 자바스크립트 로직은 완벽하게 작동하니까 그대로 유지!
+    function submitConcert() {
+        const data = {
+            concertTitle: document.getElementById('title').value,
+            place: document.getElementById('place').value,
+            concertDate: document.getElementById('date').value,
+            concertTime: document.getElementById('time').value + ":00",
+            concertPrice: document.getElementById('price').value,
+            image: document.getElementById('image').value
+        };
+
+        fetch('/api/concerts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+            .then(response => {
+                if(response.ok) {
+                    alert('공연이 성공적으로 등록되었습니다!');
+                    location.href = '/';
+                } else {
+                    alert('등록 실패! 다시 시도해주세요.');
+                }
+            });
+    }
+</script>
+
+</body>
+</html>

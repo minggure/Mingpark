@@ -8,13 +8,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+@Builder
+@AllArgsConstructor
 @Entity
 @Table(name = "concerts")
 @Getter
@@ -62,6 +62,8 @@ public class Concert {
         this.concertPrice = concertPrice;
         this.status = status;
     }
+
+
 
     public void changeStatus(ConcertStatus status) {
         this.status = status;
