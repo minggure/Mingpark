@@ -11,7 +11,6 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1")
 public class ConcertController {
 
     private final ConcertService concertService;

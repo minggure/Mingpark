@@ -2,14 +2,66 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Ming Park - 공연 목록</title>
+    <title>Ming Park - 공연 목록 & SPA 홈</title>
     <style>
-
+        /* 밍파크 시그니처 룩앤필 스타일 */
         body {
             font-family: 'Malgun Gothic', sans-serif;
             background-color: #f5f6f7;
             margin: 0;
-            padding: 50px 20px;
+            padding: 0;
+        }
+
+        /* 🌟 [상단 네비게이션 바] 오른쪽에 항상 로그인 영역 유지 */
+        .navbar {
+            background-color: white;
+            padding: 15px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .auth-area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-welcome {
+            font-size: 14px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .nav-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary { background-color: #4CAF50; color: white; }
+        .btn-primary:hover { background-color: #45a049; }
+        .btn-secondary { background-color: #e0e0e0; color: #333; }
+        .btn-secondary:hover { background-color: #d5d5d5; }
+
+        /* 메인 컨텐츠 영역 */
+        .container {
+            padding: 40px 20px;
         }
 
         h2 {
@@ -19,6 +71,7 @@
             font-size: 28px;
         }
 
+        /* 공연 카드 스타일 */
         #concert-container {
             display: flex;
             flex-wrap: wrap;
@@ -27,7 +80,6 @@
             max-width: 1200px;
             margin: 0 auto;
         }
-
 
         .concert-card {
             background: white;
@@ -42,138 +94,265 @@
             transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        /
         .concert-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
 
-        .concert-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 15px;
-            text-align: left;
-        }
+        .concert-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #222; }
+        .concert-info { font-size: 14px; color: #666; margin: 5px 0; }
+        .concert-price { font-size: 16px; font-weight: bold; color: #4CAF50; margin-top: 10px; }
 
-        .concert-info {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 8px;
-            text-align: left;
-            line-height: 1.5;
-        }
-
-        .concert-price {
-            font-size: 16px;
-            font-weight: bold;
-            color: #333;
-            margin-top: 15px;
-            margin-bottom: 15px;
-            text-align: right;
-        }
-
-
-        .book-button {
-            width: 100%;
-            padding: 12px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 15px;
-            font-weight: bold;
-            text-align: center;
-            transition: background-color 0.2s;
-        }
-        .create-button {
-            display: block;
-            margin-left: 1200px;
-            padding: 8px 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 15px;
-            font-weight: bold;
-            text-align: center;
-            transition: background-color 0.2s;
-        }
-
-        .book-button:hover {
-            background-color: #45a049;
-        }
-
-        .pagination-container {
+        /* 페이징 내비게이션 */
+        #pagination {
             display: flex;
             justify-content: center;
             gap: 10px;
             margin-top: 40px;
         }
+
+        .page-btn {
+            padding: 8px 14px;
+            border: 1px solid #ddd;
+            background-color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .page-btn.active {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+
+        .page-btn:disabled {
+            background-color: #eaeaea;
+            color: #aaa;
+            cursor: not-allowed;
+        }
+
+        /* 🌟 [SPA의 핵심] 모달 팝업 레이아웃 (로그인 / 회원가입용) */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none; /* 기본은 숨김 */
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 340px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .modal-box h3 { margin-top: 0; margin-bottom: 20px; text-align: center; }
+        .modal-close {
+            position: absolute; top: 15px; right: 15px;
+            font-size: 20px; cursor: pointer; color: #aaa;
+        }
+        .modal-close:hover { color: #333; }
+
+        .input-group { margin-bottom: 15px; }
+        .input-group input {
+            width: 100%; padding: 12px; border: 1px solid #ddd;
+            border-radius: 6px; box-sizing: border-box;
+        }
+        .input-group input:focus { border-color: #4CAF50; outline: none; }
+
+        .modal-submit {
+            width: 100%; padding: 12px; background-color: #4CAF50;
+            color: white; border: none; border-radius: 6px;
+            font-size: 16px; font-weight: bold; cursor: pointer;
+        }
+        .modal-submit:hover { background-color: #45a049; }
     </style>
 </head>
 <body>
 
-<h2>Ming Park 공연 목록</h2>
-<button class="create-button" onclick="location.href='/register.html'">공연 등록</button>
+<div class="navbar">
+    <div class="navbar-brand" onclick="location.href='/'">🎤 Ming Park</div>
+    <div class="auth-area" id="auth-area">
+    </div>
+</div>
 
-<div id="concert-container"></div>
+<div class="container">
+    <h2>🎵 현재 상영 및 예정 공연</h2>
 
-<div id="pagination" class="pagination-container"></div>
+    <div id="concert-container"></div>
+
+    <div id="pagination"></div>
+</div>
+
+<div class="modal-overlay" id="login-modal">
+    <div class="modal-box">
+        <span class="modal-close" onclick="closeModal('login-modal')">&times;</span>
+        <h3>Ming Park 로그인</h3>
+        <div class="input-group">
+            <input type="text" id="loginId" placeholder="아이디를 입력하세요">
+        </div>
+        <div class="input-group">
+            <input type="password" id="password" placeholder="비밀번호를 입력하세요">
+        </div>
+        <button class="modal-submit" onclick="handleLogin()">로그인하기</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="signup-modal">
+    <div class="modal-box">
+        <span class="modal-close" onclick="closeModal('signup-modal')">&times;</span>
+        <h3>Ming Park 회원가입</h3>
+        <div class="input-group">
+            <input type="text" id="newName" placeholder="이름을 입력하세요">
+        </div>
+        <div class="input-group">
+            <input type="text" id="newLoginId" placeholder="아이디를 입력하세요 (4자 이상)">
+        </div>
+        <div class="input-group">
+            <input type="password" id="newPassword" placeholder="비밀번호를 입력하세요 (8자 이상)">
+        </div>
+        <div class="input-group">
+            <input type="email" id="newEmail" placeholder="이메일을 입력하세요">
+        </div>
+        <button class="modal-submit" onclick="handleSignup()">회원가입하기</button>
+    </div>
+</div>
 
 <script>
+    let currentPage = 0;
 
+    // 페이지가 로드되면 세션 상태 체크 및 콘서트 리스트 불러오기 실행
+    window.onload = function() {
+        checkLoginStatus();
+        loadConcerts(currentPage);
+    };
 
-    let currentPage = 0; // 현재 보고 있는 페이지 번호 (0부터 시작)
-    const pageSize = 6;  // 한 페이지에 6개씩 끊어서 보기
+    // [기능 1] 로그인 상태 UI 업데이트 (세션 기반이지만 프론트 로컬스토리지를 보조로 활용)
+    function checkLoginStatus() {
+        const authArea = document.getElementById('auth-area');
+        const loginUser = localStorage.getItem("loginMemberName");
 
-    // 페이지를 불러오는 핵심 함수
+        if (loginUser) {
+            // 로그인 상태일 때 나오는 UI
+            authArea.innerHTML = `
+                <span class="user-welcome">👋 ${loginUser}님 환영합니다!</span>
+                <button class="nav-btn btn-primary" onclick="location.href='/register.html'">공연 등록</button>
+                <button class="nav-btn btn-secondary" onclick="handleLogout()">로그아웃</button>
+            `;
+        } else {
+            // 비로그인 상태일 때 나오는 UI
+            authArea.innerHTML = `
+                <button class="nav-btn btn-primary" onclick="openModal('login-modal')">로그인</button>
+                <button class="nav-btn btn-secondary" onclick="openModal('signup-modal')">회원가입</button>
+            `;
+        }
+    }
+
+    // 모달 제어용 헬퍼 함수
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    // [기능 2] SPA 로그인 처리
+    function handleLogin() {
+        const loginId = document.getElementById('loginId').value;
+        const password = document.getElementById('password').value;
+
+        fetch('/members/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ loginId, password })
+        })
+            .then(res => {
+                if (!res.ok) throw new Error();
+                return res.json();
+            })
+            .then(result => {
+                if (result.status === 'success') {
+                    alert(result.memberName + '님, 환영합니다!');
+                    localStorage.setItem("loginMemberName", result.memberName); // 브라우저에 이름 임시 저장
+                    closeModal('login-modal');
+                    checkLoginStatus(); // 화면 새로고침 없이 UI 즉시 변경!
+                } else {
+                    alert('아이디 또는 비밀번호를 다시 확인해주세요.');
+                }
+            })
+            .catch(() => alert('로그인 실패! 정보를 다시 확인하세요.'));
+    }
+
+    // [기능 3] SPA 회원가입 처리
+    function handleSignup() {
+        const name = document.getElementById('newName').value;
+        const loginId = document.getElementById('newLoginId').value;
+        const password = document.getElementById('newPassword').value;
+        const email = document.getElementById('newEmail').value;
+
+        fetch('/members/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, loginId, password, email })
+        })
+            .then(res => res.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    alert('회원가입 완료! 이제 로그인해주세요.');
+                    closeModal('signup-modal');
+                    openModal('login-modal'); // 자연스럽게 로그인 모달 열어주기
+                } else if(result.status === 'duplicate') {
+                    alert('이미 존재하는 아이디입니다.');
+                } else {
+                    alert('입력 양식이 올바르지 않습니다.');
+                }
+            })
+            .catch(() => alert('회원가입 중 오류가 발생했습니다.'));
+    }
+
+    // [기능 4] SPA 로그아웃 처리
+    function handleLogout() {
+        localStorage.removeItem("loginMemberName");
+        alert('로그아웃 되었습니다.');
+        checkLoginStatus(); // 새로고침 없이 비로그인 상태 UI로 복구!
+    }
+
+    // [기능 5] 백엔드에서 공연 목록 페이징으로 가져오기
     function loadConcerts(page) {
         currentPage = page;
-
-        // 주소 뒤에 page와 size 파라미터를 붙여서 호출!
-        fetch(`/api/concerts?page=${page}&size=${pageSize}`)
+        fetch(`/api/concerts?page=${page}&size=6`)
             .then(response => response.json())
             .then(data => {
                 const container = document.getElementById('concert-container');
-                container.innerHTML = ''; // 기존에 그려진 카드 싹 지우기
+                container.innerHTML = ''; // 이전 목록 청소
 
-                // 💡 중요: 데이터가 리스트가 아니라 객체라서 data.content를 돌려야 함!
-                const concerts = data.content;
-
-                concerts.forEach(concert => {
+                data.content.forEach(concert => {
                     const card = document.createElement('div');
                     card.className = 'concert-card';
-
                     card.innerHTML = `
                         <div>
                             <div class="concert-title">${concert.concertTitle}</div>
-                            <div class="concert-info">📍 장소 : ${concert.place || '추후 공지'}</div>
-                            <div class="concert-info">📅 날짜 : ${concert.concertDate}</div>
-                            <div class="concert-info">⏰ 시간 : ${concert.concertTime}</div>
+                            <div class="concert-info">📍 장소: ${concert.place}</div>
+                            <div class="concert-info">📅 날짜: ${concert.concertDate}</div>
+                            <div class="concert-info">⏰ 시간: ${concert.concertTime}</div>
                         </div>
-                        <div>
-                            <div class="concert-price">₩ ${concert.concertPrice.toLocaleString()}</div>
-                            <button class="book-button" onclick="location.href='/login.html'">예매하기</button>
-                        </div>
+                        <div class="concert-price">₩${Number(concert.concertPrice).toLocaleString()}</div>
                     `;
                     container.appendChild(card);
                 });
 
-                // 하단 페이지 번호 버튼 그리기 함수 호출
                 renderPagination(data.totalPages);
             })
-            .catch(error => console.error('에러 발생:', error));
+            .catch(error => console.error('공연 데이터를 가져오는 중 에러 발생:', error));
     }
 
-    // 하단 번호 버튼 [1] [2] [3] 만드는 로직
+    // 페이징 버튼 그리기
     function renderPagination(totalPages) {
         const pageContainer = document.getElementById('pagination');
-        pageContainer.innerHTML = ''; // 기존 버튼 지우기
+        pageContainer.innerHTML = '';
 
-        // 총 페이지가 1개 이하면 페이징 버튼 안 그리기
         if (totalPages <= 1) return;
 
         // [이전] 버튼
@@ -184,7 +363,7 @@
         prevBtn.onclick = () => loadConcerts(currentPage - 1);
         pageContainer.appendChild(prevBtn);
 
-        // 숫자 버튼들 (스프링은 0부터 시작하지만 화면엔 1부터 보여줌)
+        // 숫자 버튼들
         for (let i = 0; i < totalPages; i++) {
             const btn = document.createElement('button');
             btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
@@ -201,9 +380,7 @@
         nextBtn.onclick = () => loadConcerts(currentPage + 1);
         pageContainer.appendChild(nextBtn);
     }
-
-    // 처음에 메인 화면 켜지자마자 0번째 페이지 불러오기 실행!
-    loadConcerts(0);
 </script>
+
 </body>
 </html>
