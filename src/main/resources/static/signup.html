@@ -100,6 +100,7 @@
     <h2>Ming Park 회원가입</h2>
     <p class="description">회원 정보를 입력해 주세요.</p>
 
+    <!-- 입력한 회원 정보를 MemberController의 회원가입 주소로 전송 -->
     <form action="/members/signup" method="post">
         <div class="input-group">
             <label for="name">이름</label>
@@ -135,15 +136,18 @@
     window.onload = function() {
         const urlParams = new URLSearchParams(window.location.search);
 
+        // 회원가입 성공 시 완료 메시지를 표시하고 로그인 페이지로 이동
         if (urlParams.get('success') === 'true') {
             alert('회원가입이 완료되었습니다.');
             window.location.href = '/login.html';
         }
 
+        // DTO 입력값 검증 실패 결과를 사용자에게 안내
         if (urlParams.get('error') === 'validation') {
             alert('입력한 회원 정보를 다시 확인해 주세요.');
         }
 
+        // 이미 사용 중인 로그인 아이디인 경우 사용자에게 안내
         if (urlParams.get('error') === 'duplicate') {
             alert('이미 사용 중인 아이디입니다.');
         }

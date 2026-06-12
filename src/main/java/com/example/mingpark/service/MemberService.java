@@ -18,6 +18,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
 
+    // 중복 아이디를 확인하고 비밀번호를 암호화하여 신규 회원을 저장
     @Transactional
     public void signup(MemberSignupRequestDto request) {
 
@@ -29,6 +30,7 @@ public class MemberService {
         Member member = new Member(
                 request.getName(),
                 request.getLoginId(),
+                // 평문 비밀번호가 DB에 저장되지 않도록 BCrypt 방식으로 암호화
                 passwordEncoder.encode(request.getPassword()),
                 request.getEmail(),
                 MemberRole.USER
