@@ -23,7 +23,7 @@ public class ConcertController {
         concertService.createConcert(request);
         return "공연 등록 완료";
     }
-
+    
     @GetMapping("/api/concerts")
     public Page<ConcertResponseDto> getConcerts(
             @RequestParam(defaultValue = "0") int page,
