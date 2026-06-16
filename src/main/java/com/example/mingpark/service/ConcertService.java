@@ -36,7 +36,13 @@ public class ConcertService {
                 .map(ConcertResponseDto::new)
                 .collect(Collectors.toList());
     }
-    // 등록 화면에서 받은 기본 정보와 상세 정보를 하나의 공연 엔티티로 저장한다.
+    /**
+     * 페이지로부터 전달 받은 공연 등록 정보(DTO)를 받아 공연 엔티티를 생성하여 DB에 저장합니다
+     * 생성시 공연의 기본 상태는 ON_SALE로 고정
+     * @param request 등록할 공연의 제목 날짜 시간 가격 등 상세 정보가 담긴 DTO 객체
+     *
+     */
+    
     public void createConcert(ConcertCreatRequestDto request){
         Concert concert = Concert.builder()
                 .concertTitle(request.getConcertTitle())
