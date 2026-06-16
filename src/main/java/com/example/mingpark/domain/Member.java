@@ -2,8 +2,10 @@ package com.example.mingpark.domain;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
 
 @Entity
 @Table(name = "members")
@@ -36,6 +38,7 @@ public class Member {
     private MemberRole role;
 
     //회원가입 할 때 사용할 생성자 수정시 커밋메시지
+    @Builder
     public Member(String name, String loginId, String password, String email, MemberRole role){
         this.name = name;
         this.loginId = loginId;
