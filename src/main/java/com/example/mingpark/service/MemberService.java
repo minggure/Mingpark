@@ -13,12 +13,15 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+// @RequiredArgsConstructor : Lombok이 생성자를 자동으로 만들어줌 (의존성 주입할 때 많이 씀)
+// @AutoWired 보다는 @RequiredArgsConstructor 선호
 public class MemberService {
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
+    // @Transactional 회원가입 작업을 하나의 트랜잭션으로 처리
     public void signup(MemberSignupRequestDto request) {
 
         // 입력한 로그인 아이디가 이미 존재하는지 확인
@@ -26,13 +29,14 @@ public class MemberService {
             throw new IllegalArgumentException("이미 사용 중인 아이디입니다.");
         }
 
-        Member member = new Member(
-                request.getName(),
-                request.getLoginId(),
-                passwordEncoder.encode(request.getPassword()),
-                request.getEmail(),
-                MemberRole.USER
-        );
+        Member member = Member.builder()
+                .name(request.getName())
+                .loginId(request.getLoginId())
+                // 비밀번호 암호화
+                .password(passwordEncoder.encode(request.getPassword()))
+                .email(request.getEmail())
+                .role(MemberRole.USER)
+                .build();
 
         memberRepository.save(member);
     }
