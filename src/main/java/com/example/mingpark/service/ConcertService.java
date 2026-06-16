@@ -3,7 +3,7 @@ package com.example.mingpark.service;
 
 import com.example.mingpark.domain.Concert;
 import com.example.mingpark.domain.ConcertStatus;
-import com.example.mingpark.dto.ConcertCreatRequesstDto;
+import com.example.mingpark.dto.ConcertCreatRequestDto;
 import com.example.mingpark.dto.ConcertDetailResponseDto;
 import com.example.mingpark.dto.ConcertResponseDto;
 import com.example.mingpark.exception.ConcertNotFoundException;
@@ -32,7 +32,7 @@ public class ConcertService {
                 .collect(Collectors.toList());
     }
     // 등록 화면에서 받은 기본 정보와 상세 정보를 하나의 공연 엔티티로 저장한다.
-    public void createConcert(ConcertCreatRequesstDto request){
+    public void createConcert(ConcertCreatRequestDto request){
         Concert concert = Concert.builder()
                 .concertTitle(request.getConcertTitle())
                 .concertDate(request.getConcertDate())
