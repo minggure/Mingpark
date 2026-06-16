@@ -1,13 +1,11 @@
 package com.example.mingpark.controller;
 
-import com.example.mingpark.dto.ConcertCreatRequesstDto;
+import com.example.mingpark.dto.ConcertCreatRequestDto;
 import com.example.mingpark.dto.ConcertResponseDto;
 import com.example.mingpark.service.ConcertService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -15,11 +13,8 @@ public class ConcertController {
 
     private final ConcertService concertService;
 
-//    @GetMapping("/api/concerts")
-//    public List<ConcertResponseDto> getConcerts() {return concertService.getAllConcerts();
-//    }
-    @PostMapping("/api/concerts")
-    public String createConcert(@RequestBody ConcertCreatRequesstDto request){
+@PostMapping("/api/concerts")
+    public String createConcert(@RequestBody ConcertCreatRequestDto request){
         concertService.createConcert(request);
         return "공연 등록 완료";
     }

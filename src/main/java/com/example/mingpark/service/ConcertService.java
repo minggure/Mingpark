@@ -3,7 +3,7 @@ package com.example.mingpark.service;
 
 import com.example.mingpark.domain.Concert;
 import com.example.mingpark.domain.ConcertStatus;
-import com.example.mingpark.dto.ConcertCreatRequesstDto;
+import com.example.mingpark.dto.ConcertCreatRequestDto;
 import com.example.mingpark.dto.ConcertDetailResponseDto;
 import com.example.mingpark.dto.ConcertResponseDto;
 import com.example.mingpark.exception.ConcertNotFoundException;
@@ -42,7 +42,8 @@ public class ConcertService {
      * @param request 등록할 공연의 제목 날짜 시간 가격 등 상세 정보가 담긴 DTO 객체
      *
      */
-    public void createConcert(ConcertCreatRequesstDto request){
+    
+    public void createConcert(ConcertCreatRequestDto request){
         Concert concert = Concert.builder()
                 .concertTitle(request.getConcertTitle())
                 .concertDate(request.getConcertDate())
