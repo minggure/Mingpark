@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 @Setter @Getter
 @RequiredArgsConstructor
 public class MemberSignupRequestDto {
-
+// 회원가입 요청값을 전달, 입력 형식을 검증
     @NotBlank
     @Size(max = 20)
     private final String name;
