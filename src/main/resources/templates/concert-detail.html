@@ -5,6 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="|${concert.concertTitle} - Ming Park|">공연 상세 - Ming Park</title>
     <style>
+        /* 기존 스타일 아래에 추가 */
+        .seat-map-container {
+            display: none; /* 처음엔 숨겨둠 (버튼 누르면 나옴) */
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px dashed #eee;
+        }
+
+        .seat-map {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr); /* 1줄에 10개씩 배치 */
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .seat {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%; /* 완벽한 동그라미 (포도알) */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        /* 상태별 포도알 색상 */
+        .seat.AVAILABLE { border: 2px solid #4CAF50; background-color: white; color: #333; }
+        .seat.AVAILABLE:hover { background-color: #e8f5e9; transform: scale(1.1); }
+
+        .seat.HOLD { background-color: #ff9800; border: 2px solid #f57c00; color: white; cursor: not-allowed; }
+        .seat.RESERVED { background-color: #e53935; border: 2px solid #c62828; color: white; cursor: not-allowed; }
         body {
             margin: 0;
             padding: 90px 20px 50px;
@@ -127,18 +161,76 @@
         <!-- 예매 가능 여부에 따라 버튼을 활성화하거나 비활성화한다. -->
         <div class="actions">
             <a class="button back-button" href="/">목록으로</a>
-            <button class="button reservation-button"
-                    th:if="${concert.reservationAvailable}">
-                예매하기
+            <button id="reserve-btn"
+                    class="button reservation-button"
+                    th:if="${concert.reservationAvailable}"
+                    th:data-concert-id="${concert.concertId}">예매하기
             </button>
             <button class="button reservation-button"
                     th:unless="${concert.reservationAvailable}"
-                    disabled>
-                예매 불가
+                    disabled>예매 불가
             </button>
+        </div> <div id="seat-map-container" class="seat-map-container">
+        <h3 style="margin-bottom: 10px;">🟢 좌석 선택 (포도알)</h3>
+        <div id="seat-map" class="seat-map">
         </div>
+    </div>
     </section>
 </main>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const reserveBtn = document.getElementById("reserve-btn");
 
+        if (reserveBtn) {
+            reserveBtn.addEventListener("click", function () {
+                    // 1. 버튼에 숨겨둔 공연 ID(concertId)를 가져온다!
+                    const concertId = this.getAttribute("data-concert-id");
+
+                    // 2. 우리가 방금 만든 그 API 주소로 GET 요청을 보낸다!
+                    fetch(`/api/concerts/${concertId}/seats`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error("네트워크 응답이 정상이 아닙니다.");
+                            }
+                            return response.json(); // JSON 데이터를 자바스크립트 객체로 변환
+                        })
+                        // 기존 fetch 코드 안의 두 번째 .then(data => { ... }) 부분을 이걸로 교체!
+                        .then(data => {
+                            // 콘솔 출력은 유지
+                            console.log("🎉 서버에서 받아온 좌석 데이터:", data);
+
+                            // 1. 포도알 상자 가져오기
+                            const container = document.getElementById("seat-map-container");
+                            const seatMap = document.getElementById("seat-map");
+
+                            // 2. 상자 초기화하고 화면에 보이게 짠!
+                            seatMap.innerHTML = "";
+                            container.style.display = "block";
+
+                            // 3. 50개의 데이터를 돌면서 포도알을 하나씩 빚어내기
+                            data.forEach(seat => {
+                                const seatDiv = document.createElement("div");
+                                // class에 'seat AVAILABLE' 처럼 상태값을 줘서 색깔을 입힘!
+                                seatDiv.className = `seat ${seat.status}`;
+                                seatDiv.innerText = seat.seatNumber; // 포도알 안에 번호 적기
+
+                                // 4. 하얀 포도알(AVAILABLE)일 때만 클릭 이벤트 달아주기
+                                if (seat.status === 'AVAILABLE') {
+                                    seatDiv.addEventListener("click", function () {
+                                        alert(`✨ ${seat.seatNumber}번 좌석을 선택했습니다.`);
+                                    });
+                                }
+
+                                // 다 빚은 포도알을 상자에 쏙 넣기
+                                seatMap.appendChild(seatDiv);
+                            });
+                        })
+                }
+            )
+        }
+
+    })
+</script>
 </body>
 </html>
+

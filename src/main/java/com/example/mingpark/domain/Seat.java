@@ -13,6 +13,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -46,11 +47,8 @@ public class Seat {
     @Column(nullable = false, length = 20)
     private SeatStatus status = SeatStatus.AVAILABLE;
 
-    public Seat(Concert concert, int seatNumber) {
-        this.concert = concert;
-        this.seatNumber = seatNumber;
-    }
 
+    @Builder
     public Seat(Concert concert, int seatNumber, SeatStatus status) {
         this.concert = concert;
         this.seatNumber = seatNumber;
