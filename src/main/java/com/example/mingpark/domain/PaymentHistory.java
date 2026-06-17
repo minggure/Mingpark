@@ -2,6 +2,7 @@ package com.example.mingpark.domain;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
@@ -17,12 +18,12 @@ public class PaymentHistory {
     @Column(name = "payment_history_id")
     private Long id;
 
-    // 👤 [회원 ➡️ 결제이력] 1:N 비식별 관계
+    // [회원 ➡️ 결제이력] 1:N 비식별 관계
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    // 🎫 [예매 ➡️ 결제이력] 1:N 비식별 관계
+    // [예매 ➡️ 결제이력] 1:N 비식별 관계
     // TODO: 다른 팀원이 예매(Reservation) 엔티티 완성하면 이 부분 패키지 경로 및 조율 필요!
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reservation_id", nullable = false)
@@ -42,13 +43,13 @@ public class PaymentHistory {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt; // 처리 일시
 
-    //생성자
+    @Builder
     public PaymentHistory(Member member, Reservation reservation, int amount, PaymentType type, PaymentStatus status) {
         this.member = member;
         this.reservation = reservation;
         this.amount = amount;
         this.type = type;
         this.status = status;
-        this.createdAt = LocalDateTime.now(); // 생성되는 순간의 시간이 자동으로 기록됨!
+        this.createdAt = LocalDateTime.now();
     }
 }

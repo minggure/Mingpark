@@ -290,7 +290,7 @@
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-    // [기능 2] SPA 로그인 처리
+    // 로그인 처리
     function handleLogin() {
         const loginId = document.getElementById('loginId').value;
         const password = document.getElementById('password').value;
@@ -317,7 +317,7 @@
             .catch(() => alert('로그인 실패! 정보를 다시 확인하세요.'));
     }
 
-    // SPA 회원가입 처리
+    // 회원가입 처리
     function handleSignup() {
         const name = document.getElementById('newName').value;
         const loginId = document.getElementById('newLoginId').value;
@@ -345,14 +345,14 @@
             .catch(() => alert('회원가입 중 오류가 발생했습니다.'));
     }
 
-    // SPA 로그아웃 처리
+    // 로그아웃 처리
     function handleLogout() {
         localStorage.removeItem("loginMemberName");
         alert('로그아웃 되었습니다.');
-        checkLoginStatus(); // 새로고침 없이 비로그인 상태 UI로 복구!
+        checkLoginStatus(); // 새로고침 없이 비로그인 상태 UI로 복구
     }
 
-    // [기능 5] 백엔드에서 공연 목록 페이징으로 가져오기
+    // 백엔드에서 공연 목록 페이징으로 가져오기
     function loadConcerts(page) {
         currentPage = page;
         fetch(`/api/concerts?page=${page}&size=6`)

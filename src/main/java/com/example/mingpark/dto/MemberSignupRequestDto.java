@@ -4,10 +4,9 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.RequiredArgsConstructor;
 
-@Setter @Getter
+@Getter
 @RequiredArgsConstructor
 public class MemberSignupRequestDto {
 // 회원가입 요청값을 전달, 입력 형식을 검증
