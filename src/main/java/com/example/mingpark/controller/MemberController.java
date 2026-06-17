@@ -44,6 +44,13 @@ public class MemberController {
         }
     }
 
+    /**
+     * 입력받은 아이디와 비밀번호를 검증하여 일치하면 서블릿 세션에 회원 정보를 저장하고,
+     * 성공 여부와 회원의 이름을 응답으로 반환
+     * @param loginDto 클라이언트가 보낸 로그인 요청 정보
+     * @param request 세션 획득과 로그인 상태 저장하는 HTTP 서블릿 요청 객체
+     * @return 로그인 성공시 이름과 200(OK)응답 / 로그인 실패시 400(BADREQUSET)응답
+     */
     @PostMapping("/members/login")
     public ResponseEntity<?> login(@RequestBody LoginRequestDto loginDto, HttpServletRequest request) {
 

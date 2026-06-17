@@ -40,6 +40,13 @@ public class MemberService {
 
         memberRepository.save(member);
     }
+    /**
+     * 데이터베이스(DB) 및 암호화 검증을 통해 회원의 로그인 인증을 수행
+     * 입력받은 로그인 아이디로 회원을 조회한 후, 회원이 존재하지 않거나
+     * {@link PasswordEncoder}를 통한 암호화 비밀번호 검증이 실패하면 {@code null}을 반환
+     * @param loginDto 클라이언트로부터 전달받은 로그인 요청 정보 (아이디, 평문 비밀번호)
+     * @return 인증에 성공 시 {@link Member} 엔티티 객체, 인증 실패 시(아이디 부재 또는 비밀번호 불일치) {@code null}
+     */
     public Member login(LoginRequestDto loginDto) {
         // DB에서 로그인 아이디로 회원 조회
         Optional<Member> findMemberOptional = memberRepository.findByLoginId(loginDto.getLoginId());
