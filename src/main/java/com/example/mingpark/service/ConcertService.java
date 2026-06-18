@@ -52,6 +52,8 @@ public class ConcertService {
                 .place(request.getPlace())
                 .reservationStartAt(request.getReservationStartAt())
                 .reservationEndAt(request.getReservationEndAt())
+                .image(request.getImage())
+                .status(ConcertStatus.ON_SALE)
                 .build();
 
         concertRepository.save(concert); // 입력 받은 정보를 DB에 자동으로 넣어줌
