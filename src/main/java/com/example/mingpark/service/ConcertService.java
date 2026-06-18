@@ -53,7 +53,7 @@ public class ConcertService {
                 .place(request.getPlace())
                 .reservationStartAt(request.getReservationStartAt())
                 .reservationEndAt(request.getReservationEndAt())
-                // 예매 가능 기간 안에서만 실제 예매 가능으로 계산된다.
+                .image(request.getImage())
                 .status(ConcertStatus.ON_SALE)
                 .build();
 
