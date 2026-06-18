@@ -29,4 +29,14 @@ public class ConcertController {
     ) {
         return concertService.getConcerts(page, size);
     }
+    /**
+     * [GET] 특정 공연의 단일 상세 정보 조회 (SPA 상세 화면용 API)
+     * @param concertId 조회할 공연의 고유 ID
+     * @return 200 OK 응답과 함께 공연 상세 정보 DTO 반환
+     */
+    @GetMapping("/api/concerts/{concertId}")
+    public com.example.mingpark.dto.ConcertDetailResponseDto getConcertDetailApi(@PathVariable Long concertId) {
+        // 🌟 ConcertService에 이미 만들어져 있는 getConcertDetail 메서드를 그대로 활용하면 끝!
+        return concertService.getConcertDetail(concertId);
+    }
 }
