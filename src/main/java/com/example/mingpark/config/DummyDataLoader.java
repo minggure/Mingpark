@@ -1,17 +1,12 @@
 package com.example.mingpark.config; // 패키지 이름은 네 프로젝트에 맞게!
 
 import com.example.mingpark.domain.Concert;
-import com.example.mingpark.domain.Member;
-import com.example.mingpark.domain.MemberRole;
 import com.example.mingpark.domain.Seat;
 import com.example.mingpark.domain.SeatStatus;
 import com.example.mingpark.repository.ConcertRepository;
-import com.example.mingpark.repository.MemberRepository;
 import com.example.mingpark.repository.SeatRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -27,20 +22,6 @@ public class DummyDataLoader implements CommandLineRunner {
 
     private final ConcertRepository concertRepository;
     private final SeatRepository seatRepository;
-    private final MemberRepository memberRepository;
-    private final PasswordEncoder passwordEncoder;
-
-    @Value("${ADMIN_LOGIN_ID:}")
-    private String adminLoginId;
-
-    @Value("${ADMIN_PASSWORD:}")
-    private String adminPassword;
-
-    @Value("${ADMIN_EMAIL:}")
-    private String adminEmail;
-
-    @Value("${ADMIN_NAME:관리자}")
-    private String adminName;
 
     /**
      * 더미데이터 50개를 만들어주는 메소드이다.
@@ -49,8 +30,6 @@ public class DummyDataLoader implements CommandLineRunner {
      */
     @Override
     public void run(String... args) throws Exception {
-        createAdminMemberIfNotExists();
-
       // 가짜 콘서트 1개 생성 및 저장 (DB에 1번 콘서트가 생김)
         Concert concert = Concert.builder()
                 .concertTitle("가짜 콘서트")
@@ -90,27 +69,5 @@ public class DummyDataLoader implements CommandLineRunner {
 
         seatRepository.saveAll(seats);
     }
-    private void createAdminMemberIfNotExists() {
-        if (adminLoginId.isBlank() || adminPassword.isBlank() || adminEmail.isBlank()) {
-            return;
-        }
-
-        Member existingAdmin = memberRepository.findByLoginId(adminLoginId).orElse(null);
-        if (existingAdmin != null) {
-            existingAdmin.changeRole(MemberRole.ADMIN);
-            existingAdmin.changePassword(passwordEncoder.encode(adminPassword));
-            memberRepository.save(existingAdmin);
-            return;
-        }
-
-        Member admin = Member.builder()
-                .name(adminName)
-                .loginId(adminLoginId)
-                .password(passwordEncoder.encode(adminPassword))
-                .email(adminEmail)
-                .role(MemberRole.ADMIN)
-                .build();
-
-        memberRepository.save(admin);
-    }
 }
+

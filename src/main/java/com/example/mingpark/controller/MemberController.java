@@ -20,7 +20,7 @@ public class MemberController {
 
     private final MemberService memberService;
 
-    // 로그인 API
+    // 회원가입 API
     @PostMapping("/members/signup")
     public ResponseEntity<?> signup(
             // @RequestBody : 프론트에서 보낸 JSON, MemberSignupRequestDto 객체로 변환
