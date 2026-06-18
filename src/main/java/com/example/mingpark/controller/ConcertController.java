@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -74,7 +75,6 @@ public class ConcertController {
 
         return member.getRole() == MemberRole.ADMIN;
     }
-}
     /**
      * [GET] 특정 공연의 단일 상세 정보와 티켓 상태 등을 종합적으로 조회.
      * * @param concertId 상세 조회할 공연의 고유 식별 고유 ID
