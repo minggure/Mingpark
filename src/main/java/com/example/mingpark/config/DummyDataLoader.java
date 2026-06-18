@@ -30,7 +30,6 @@ public class DummyDataLoader implements CommandLineRunner {
      */
     @Override
     public void run(String... args) throws Exception {
-
       // 가짜 콘서트 1개 생성 및 저장 (DB에 1번 콘서트가 생김)
         Concert concert = Concert.builder()
                 .concertTitle("가짜 콘서트")
@@ -71,3 +70,4 @@ public class DummyDataLoader implements CommandLineRunner {
         seatRepository.saveAll(seats);
     }
 }
+

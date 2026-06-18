@@ -1,6 +1,10 @@
 package com.example.mingpark.controller;
 
+import com.example.mingpark.domain.Member;
+import com.example.mingpark.domain.MemberRole;
 import com.example.mingpark.service.ConcertImageService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,12 +26,31 @@ public class ConcertImageController {
 
     // multipart/form-data의 image 파일을 저장하고 브라우저에서 접근 가능한 URL을 반환한다.
     @PostMapping("/api/concert-images")
-    public ResponseEntity<?> uploadConcertImage(@RequestParam MultipartFile image) {
+    public ResponseEntity<?> uploadConcertImage(@RequestParam MultipartFile image, HttpServletRequest request) {
+        // 공연 포스터 업로드 -> 관리자만 가능(403 거절)
+        if (!isAdmin(request)) {
+            return ResponseEntity.status(403).body(Map.of("message", "관리자만 이미지를 업로드할 수 있습니다."));
+        }
+
         try {
             String imageUrl = concertImageService.upload(image);
             return ResponseEntity.ok(Map.of("imageUrl", imageUrl));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
+    }
+
+    private boolean isAdmin(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            return false;
+        }
+
+        Object loginMember = session.getAttribute("loginMember");
+        if (!(loginMember instanceof Member member)) {
+            return false;
+        }
+
+        return member.getRole() == MemberRole.ADMIN;
     }
 }
