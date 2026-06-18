@@ -67,7 +67,21 @@ public class MemberController {
 
         return ResponseEntity.ok(Map.of(
                 "status", "success",
-                "memberName", loginMember.getName()
+                "memberName", loginMember.getName(),
+                "role", loginMember.getRole().name()
+                // 로그인 성공 응답에 role 추가
         ));
+    }
+
+    // 로그아웃 API
+    // 브라우저 localStorage, 서버 세션 제거
+    @PostMapping("/members/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+
+        return ResponseEntity.ok(Map.of("status", "success"));
     }
 }

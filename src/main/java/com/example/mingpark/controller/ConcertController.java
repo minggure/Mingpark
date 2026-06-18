@@ -1,11 +1,20 @@
 package com.example.mingpark.controller;
 
+import com.example.mingpark.domain.Member;
+import com.example.mingpark.domain.MemberRole;
 import com.example.mingpark.dto.ConcertCreatRequestDto;
 import com.example.mingpark.dto.ConcertResponseDto;
 import com.example.mingpark.service.ConcertService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -25,9 +34,17 @@ public class ConcertController {
      * @return 공연 등록 성공 여부를 알리는 안내 문자열 ("공연 등록 완료")
      */
     @PostMapping("/api/concerts")
-    public String createConcert(@RequestBody ConcertCreatRequestDto request){
+    public ResponseEntity<String> createConcert(
+            @RequestBody ConcertCreatRequestDto request,
+            HttpServletRequest httpRequest
+    ) {
+        // 공연 등록 API에서 세션의 로그인 회원을 꺼내고, role이 ADMIN인지 확인
+        if (!isAdmin(httpRequest)) {
+            return ResponseEntity.status(403).body("관리자만 공연을 등록할 수 있습니다.");
+        }
+
         concertService.createConcert(request);
-        return "공연 등록 완료";
+        return ResponseEntity.ok("공연 등록 완료");
     }
     /**
      * [GET] 메인 화면에 노출할 현재 상영 및 예정 공연 목록을 페이징 처리하여 조회합니다.
@@ -43,6 +60,21 @@ public class ConcertController {
     ) {
         return concertService.getConcerts(page, size);
     }
+
+    private boolean isAdmin(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            return false;
+        }
+
+        Object loginMember = session.getAttribute("loginMember");
+        if (!(loginMember instanceof Member member)) {
+            return false;
+        }
+
+        return member.getRole() == MemberRole.ADMIN;
+    }
+}
     /**
      * [GET] 특정 공연의 단일 상세 정보와 티켓 상태 등을 종합적으로 조회.
      * * @param concertId 상세 조회할 공연의 고유 식별 고유 ID

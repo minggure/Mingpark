@@ -2,7 +2,6 @@ package com.example.mingpark.service;
 
 
 import com.example.mingpark.domain.Concert;
-import com.example.mingpark.domain.ConcertStatus;
 import com.example.mingpark.dto.ConcertCreatRequestDto;
 import com.example.mingpark.dto.ConcertDetailResponseDto;
 import com.example.mingpark.dto.ConcertResponseDto;

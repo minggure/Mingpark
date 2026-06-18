@@ -68,17 +68,6 @@ public class Concert {
         this.concertPrice = concertPrice;
     }
 
-    public Concert(String concertTitle, String image, LocalTime concertTime, LocalDate concertDate, int concertPrice, ConcertStatus status) {
-        this.concertTitle = concertTitle;
-        this.image = image;
-        this.concertTime = concertTime;
-        this.concertDate = concertDate;
-        this.concertPrice = concertPrice;
-        this.status = status;
-    }
-
-
-
     public void changeStatus(ConcertStatus status) {
         this.status = status;
     }

@@ -48,4 +48,13 @@ public class Member {
 
 
     }
+
+    // 기존의 admin 계정에 role 을 바꿔 관리자 계정으로 만들어주는 메소드
+    public void changeRole(MemberRole role) {
+        this.role = role;
+    }
+
+    public void changePassword(String password) {
+        this.password = password;
+    }
 }
