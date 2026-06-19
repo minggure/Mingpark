@@ -299,6 +299,13 @@
         fetch('/members/logout', { method: 'POST' }).finally(() => {
         localStorage.removeItem("loginMemberName");
         localStorage.removeItem("loginMemberRole");
+        //아이디, 비밀번호 입력 칸 비우기!
+        const loginIdInput = document.getElementById('loginId');
+        const passwordInput = document.getElementById('password');
+
+        if (loginIdInput) loginIdInput.value = '';
+        if (passwordInput) passwordInput.value = '';
+
         alert('로그아웃 되었습니다.');
         checkLoginStatus(); // 새로고침 없이 비로그인 상태 UI로 복구
         });

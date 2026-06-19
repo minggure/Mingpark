@@ -88,13 +88,4 @@ public class ConcertController {
 
         return member.getRole() == MemberRole.ADMIN;
     }
-    /**
-     * [GET] 특정 공연의 단일 상세 정보와 티켓 상태 등을 종합적으로 조회.
-     * * @param concertId 상세 조회할 공연의 고유 식별 고유 ID
-     * @return 200 OK 응답과 함께 해당 공연의 단일 상세 정보 DTO 반환
-     */
-    @GetMapping("/api/concerts/{concertId}")
-    public com.example.mingpark.dto.ConcertDetailResponseDto getConcertDetailApi(@PathVariable Long concertId) {
-        return concertService.getConcertDetail(concertId);
-    }
 }
