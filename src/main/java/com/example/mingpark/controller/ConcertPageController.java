@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 public class ConcertPageController {
     @GetMapping("/concerts/{concertId}")
     public String getConcertDetail(@PathVariable Long concertId) {
-        // 예: /?target=14 주소로 보냄
         return "redirect:/?target=" + concertId;
     }
 }
