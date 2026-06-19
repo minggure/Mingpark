@@ -7,7 +7,7 @@
         </div>
 
         <div class="input-group">
-            <input id="password" type="password" name="password" placeholder="비밀번호를 입력하세요" required>
+            <input id="password" type="password" name="password" placeholder="비밀번호를 입력하세요" required >
         </div>
 
         <button type="submit">로그인</button>
@@ -22,7 +22,7 @@
     document.getElementById('loginForm').addEventListener('submit', function(e) {
         e.preventDefault(); // 페이지 전환 방지
 
-        final data = {
+        const data = {
             loginId: document.getElementById('loginId').value,
             password: document.getElementById('password').value
         };
