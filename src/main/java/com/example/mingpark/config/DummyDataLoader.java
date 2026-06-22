@@ -33,7 +33,7 @@ public class DummyDataLoader implements CommandLineRunner {
       // 가짜 콘서트 1개 생성 및 저장 (DB에 1번 콘서트가 생김)
         Concert concert = Concert.builder()
                 .concertTitle("가짜 콘서트")
-                .image("https://picsum.photos/800/600")  //랜덤 이미지 생성 URL
+                .image("https://picsum.photos/800/600?random" + java.util.UUID.randomUUID().toString())  //랜덤 이미지 생성 URL
                 .concertTime(java.time.LocalTime.of(19, 0))
                 .concertDate(java.time.LocalDate.now().plusDays(7))
                 .concertPrice(150000) // 티켓 가격 15만 원
