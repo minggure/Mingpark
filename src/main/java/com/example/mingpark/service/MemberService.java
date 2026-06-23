@@ -22,6 +22,9 @@ public class MemberService {
 
     @Transactional
     // @Transactional 회원가입 작업을 하나의 트랜잭션으로 처리
+    /**
+     * 
+     */
     public void signup(MemberSignupRequestDto request) {
 
         // 입력한 로그인 아이디가 이미 존재하는지 확인
