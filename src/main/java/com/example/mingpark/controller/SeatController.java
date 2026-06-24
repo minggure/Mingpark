@@ -5,6 +5,8 @@ import com.example.mingpark.facade.HoldLockFacade;
 import com.example.mingpark.security.CustomUserDetails;
 import com.example.mingpark.service.SeatReservationService;
 import com.example.mingpark.service.SeatService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
