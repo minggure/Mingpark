@@ -10,7 +10,7 @@ import lombok.Getter;
 public class SeatResponseDto {
     private final Long seatId;
     private final int seatNumber;
-    private final String status;  // 좌석의 상태
+    private String status;  // 좌석의 상태
 
     /**
      * 엔티티를 DTO로 변환하기 위한 생성자
@@ -20,5 +20,9 @@ public class SeatResponseDto {
         this.seatId = seat.getId();
         this.seatNumber = seat.getSeatNumber();
         this.status = seat.getStatus().name();
+    }
+    //Redis 선점에 따라 변화하는 Status. setter 사용하는 대신 status만 생성자 만들기
+    public void changeStatus(String status) {
+        this.status = status;
     }
 }

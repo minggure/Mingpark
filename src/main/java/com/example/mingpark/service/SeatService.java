@@ -28,12 +28,6 @@ public class SeatService {
         List<Seat> rawSeats = seatRepository.findAllByConcert_ConcertId(concertId);
 
 
-        /**
-         * rawSeats 는 현재 좌석 전체
-         * stream() 처리할 목록을 일렬로 정리
-         * map() 정리한 데이터를 하나씩 가져와 객체 생성
-         * collect 다시 모아서 담는것
-         */
         return rawSeats.stream()
                 .map(SeatResponseDto::new)
                 .collect(Collectors.toList());
