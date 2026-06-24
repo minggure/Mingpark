@@ -28,19 +28,13 @@ public class SeatController {
     private final HoldLockFacade holdLockFacade;
     /**
      * [GET] 특정 공연의 전체 좌석 상태를 조회
-     * @param concertId 조호할 공연의 고유 번호 (양수 여야함)
+     * @param concertId 조호할 공연의 고유 번호 (양수)
      * @return 200 OK 와 함께 해당공연의 모든 좌석 상태 정보 리스트를 반환
      */
     @GetMapping("/{concertId}/seats")
     public ResponseEntity<List<SeatResponseDto>> getSeats(
             @PathVariable @Positive(message = "공연 ID는 양수여야 합니다.") Long concertId) {
         List<SeatResponseDto> seats = seatService.getSeatsByConcertId(concertId);
-        for (SeatResponseDto seat : seats) {
-            String occupant = seatReservationService.getSeatOccupant(concertId, seat.getSeatNumber());
-            if (occupant != null) {
-                seat.changeStatus("HOLD");
-            }
-        }
         return ResponseEntity.ok(seats);
     }
     @PostMapping("/{concertId}/seats/{seatId}/hold")
