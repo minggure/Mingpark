@@ -391,8 +391,8 @@
                     if (seat.status === 'AVAILABLE') {
                         seatDiv.onclick = () => {
                             if (confirm(`${seat.seatNumber}번 좌석을 5분간 임시 선점하시겠습니까?`)) {
-                                // 바로 예매 API를 찌르지 않고, 백엔드 Redis 점유 API를 먼저 거치도록 중간 파이프라인 개설
-                                tryOccupySeat(seat.seatNumber, seat.seatId);
+                                // 새로운 검증 규격에 맞게 좌석 번호 대신 seatId를 직접 전달합니다.
+                                tryOccupySeat(seat.seatId);
                             }
                         };
                     }
@@ -404,8 +404,8 @@
     }
 
     // redis 선점 추가 : 결제창 넘어가기 전 Redis에 3분 알람 시계를 등록하는 비동기 가드 함수
-    function tryOccupySeat(seatNumber, seatId) {
-        fetch(`/api/concerts/${targetConcertId}/seats/${seatNumber}/occupy`, {
+    function tryOccupySeat(seatId) {
+        fetch(`/api/concerts/${targetConcertId}/seats/${seatId}/occupy`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         })
@@ -415,10 +415,9 @@
                     throw new Error("비로그인");
                 }
                 if (res.status === 400) {
-                    // 이미 다른 사람이 일찍 Redis를 선점한 상태라면 백엔드가 400 응답을 주며 차단
                     return res.json().then(data => {
                         alert(data.message);
-                        loadSeats(); // 최신 좌석판으로 새로고침
+                        loadSeats(); // 좌석판 동기화
                         throw new Error("선점 실패");
                     });
                 }
@@ -426,12 +425,12 @@
             })
             .then(result => {
                 if (result.status === 'success') {
-                    alert(result.message); // "좌석이 3분간 임시 선점되었습니다."
-                    // 선점한 단 한 명의 유저만 MySQL DB 예매 확정 프로세스로 통과시킵니다.
+                    alert(result.message);
+                    // 선점 가드를 정상 통과했으므로 최종 MySQL 예매 확정 프로세스로 진입
                     executeReservation(seatId);
                 }
             })
-            .catch(err => console.log("선점 가드 차단 작동 완료"));
+            .catch(err => console.log("파사드 가드 작동 차단 완료"));
     }
 
     function executeReservation(seatId) {
