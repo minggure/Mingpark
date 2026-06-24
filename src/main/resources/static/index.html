@@ -405,7 +405,7 @@
 
     // redis 선점 추가 : 결제창 넘어가기 전 Redis에 3분 알람 시계를 등록하는 비동기 가드 함수
     function tryOccupySeat(seatId) {
-        fetch(`/api/concerts/${targetConcertId}/seats/${seatId}/occupy`, {
+        fetch(`/api/concerts/${targetConcertId}/seats/${seatId}/hold`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         })
