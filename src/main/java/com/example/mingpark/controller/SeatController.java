@@ -1,16 +1,17 @@
 package com.example.mingpark.controller;
 
-import com.example.mingpark.domain.Member;
 import com.example.mingpark.dto.SeatResponseDto;
 import com.example.mingpark.facade.HoldLockFacade;
+import com.example.mingpark.security.CustomUserDetails;
 import com.example.mingpark.service.SeatReservationService;
 import com.example.mingpark.service.SeatService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,46 +33,52 @@ public class SeatController {
      */
     @GetMapping("/{concertId}/seats")
     public ResponseEntity<List<SeatResponseDto>> getSeats(
-            @PathVariable @Positive(message = "공연 ID는 양수여야 합니다.") Long concertId){
+            @PathVariable @Positive(message = "공연 ID는 양수여야 합니다.") Long concertId) {
         List<SeatResponseDto> seats = seatService.getSeatsByConcertId(concertId);
-        //redis 도입하며 추가
         for (SeatResponseDto seat : seats) {
             String occupant = seatReservationService.getSeatOccupant(concertId, seat.getSeatNumber());
-            // DB상에는 AVAILABLE(예매가능)이더라도, Redis에 선점되었다면 유저에게는 HOLD(선점됨)로 위장하여 응답
             if (occupant != null) {
                 seat.changeStatus("HOLD");
             }
         }
         return ResponseEntity.ok(seats);
     }
-    /**
-     * [POST] 사용자가 특정 좌석을 클릭했을 때 파사드를 호출하여 5분 선점(분산 락)을 진행
-     *
-     * @param concertId 공연 고유 식별 ID
-     * @param seatId 선택한 좌석의 고유 식별 PK
-     * @param request 유저의 세션 검증을 위한 객체
-     * @return 성공 시 200 OK, 실패 시 400 에러와 사유 반환
-     */
-    @PostMapping("/{concertId}/seats/{seatId}/occupy")
-    public ResponseEntity<Map<String, String>> occupySeat(
-            @PathVariable("concertId") @Positive(message = "공연 ID는 양수여야 합니다.") Long concertId,
-            @PathVariable("seatId") @Positive(message = "좌석 ID는 양수여야 합니다.") Long seatId,
-            HttpServletRequest request
+    @PostMapping("/{concertId}/seats/{seatId}/hold")
+    public ResponseEntity<?> holdSeat(
+            @PathVariable Long concertId,
+            @PathVariable Long seatId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        HttpSession session = request.getSession(false);
-        Member loginMember = (Member) session.getAttribute("loginMember");
+        // 1. 시큐리티 가드를 통한 인증 상태 검증
+        if (userDetails == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
+        }
+
+        Long memberId = userDetails.getMemberId();
 
         try {
-            holdLockFacade.holdSeat(seatId, loginMember.getId());
+            // 2. 파사드를 호출하여 원자적 분산 락 연산 시작
+            holdLockFacade.holdSeat(seatId, memberId);
 
             return ResponseEntity.ok(Map.of(
                     "status", "success",
-                    "message", "좌석이 5분간 임시 선점되었습니다."
+                    "message", "좌석 찜하기 성공! 5분 안에 결제를 완료해주세요."
             ));
+
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "status", "fail",
+            return ResponseEntity.badRequest().body(Map.of(
+                    "status", "failed",
                     "message", e.getMessage()
+            ));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "status", "failed",
+                    "message", e.getMessage()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "status", "error",
+                    "message", "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
             ));
         }
     }

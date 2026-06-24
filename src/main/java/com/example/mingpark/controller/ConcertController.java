@@ -1,27 +1,16 @@
 package com.example.mingpark.controller;
 
-//import com.example.mingpark.domain.Member;
-// com.example.mingpark.domain.MemberRole;
+import com.example.mingpark.domain.MemberRole;
 import com.example.mingpark.dto.ConcertCreatRequestDto;
 import com.example.mingpark.dto.ConcertDetailResponseDto;
 import com.example.mingpark.dto.ConcertResponseDto;
-import com.example.mingpark.facade.HoldLockFacade;
+import com.example.mingpark.security.CustomUserDetails; // 추가된 시큐리티 디테일 클래스 임포트
 import com.example.mingpark.service.ConcertService;
-//import jakarta.servlet.http.HttpServletRequest;
-//import jakarta.servlet.http.HttpSession;
-import jakarta.persistence.Id;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -36,7 +25,6 @@ import java.util.Map;
 public class ConcertController {
 
     private final ConcertService concertService;
-
     /**
      * [POST] 관리자 화면에서 입력한 새로운 공연 정보를 시스템에 등록합니다.
      * * @param request 등록할 공연 제목, 장소, 시간, 티켓 가격, 포스터 이미지 경로 등이 담긴 DTO
@@ -46,13 +34,11 @@ public class ConcertController {
     @PostMapping("/api/concerts")
     public ResponseEntity<String> createConcert(
             @RequestBody ConcertCreatRequestDto request,
-            HttpServletRequest httpRequest
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        // 공연 등록 API에서 세션의 로그인 회원을 꺼내고, role이 ADMIN인지 확인
-//        if (!isAdmin(httpRequest)) {
-//            return ResponseEntity.status(403).body("관리자만 공연을 등록할 수 있습니다.");
-//        }
-
+        if (userDetails == null || userDetails.getRole() != MemberRole.ADMIN) {
+            return ResponseEntity.status(403).body("관리자만 공연을 등록할 수 있습니다.");
+        }
         concertService.createConcert(request);
         return ResponseEntity.ok("공연 등록 완료");
     }
@@ -82,82 +68,5 @@ public class ConcertController {
     @GetMapping("/api/concerts/{concertId}")
     public ConcertDetailResponseDto getConcertDetailApi(@PathVariable Long concertId) {
         return concertService.getConcertDetail(concertId);
-    }
-    
-//    private boolean isAdmin(HttpServletRequest request) {
-//        HttpSession session = request.getSession(false);
-//        if (session == null) {
-//            return false;
-//        }
-//
-//        Object loginMember = session.getAttribute("loginMember");
-//        if (!(loginMember instanceof Member member)) {
-//            return false;
-//        }
-//
-//        return member.getRole() == MemberRole.ADMIN;
-//    }
-}
-
-    private boolean isAdmin(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            return false;
-        }
-
-        Object loginMember = session.getAttribute("loginMember");
-        if (!(loginMember instanceof Member member)) {
-            return false;
-        }
-
-        return member.getRole() == MemberRole.ADMIN;
-    }
-    private final HoldLockFacade holdLockFacade;
-
-    @PostMapping("/api/concerts/{concertId}/seats/{seatId}/hold")
-    public ResponseEntity<?> holdSeat(
-            @PathVariable Long concertId,
-            @PathVariable Long seatId,
-            HttpServletRequest request) {
-
-        // 1. 세션에서 현재 로그인한 사용자 정보 꺼내기
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("loginMember") == null) {
-            return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
-        }
-
-        Member loginMember = (Member) session.getAttribute("loginMember");
-
-        // 💡 수정됨: 이름이 아니라 Long 타입의 ID를 그대로 꺼내서 memberId에 담습니다!
-        Long memberId = loginMember.getId();
-
-        // 💡 수정됨: memberName 대신 memberId 출력
-        log.info("예매 요청 들어옴 - concertId={}, seatId={}, userId={}", concertId, seatId, memberId);
-
-        try {
-            // 2. 대망의 지배인(Facade) 호출! (분산락 시작)
-            // 💡 수정됨: memberName 대신 memberId 전달
-            holdLockFacade.holdSeat( seatId, memberId);
-
-            // 3. 지배인이 에러 없이 무사히 통과했다면 성공 응답 보내기
-            return ResponseEntity.ok(Map.of(
-                    "status", "success",
-                    "message", "좌석 찜하기 성공! 5분 안에 결제를 완료해주세요."
-            ));
-
-        } catch (IllegalStateException e) {
-            // 4. 레디스에서 컷 당했거나 DB 확인 시 이미 차있는 자리인 경우 (이미 선점됨)
-            return ResponseEntity.badRequest().body(Map.of(
-                    "status", "failed",
-                    "message", e.getMessage()
-            ));
-        } catch (Exception e) {
-            // 5. 서버 내부의 알 수 없는 에러 발생
-            log.error("서버 에러 발생", e);
-            return ResponseEntity.internalServerError().body(Map.of(
-                    "status", "error",
-                    "message", "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
-            ));
-        }
     }
 }
