@@ -16,8 +16,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 /**
- * 공연 정보 관련 REST API 요청을 처리컨트롤러 클래스.
- * 모든 요청과 응답은 JSON 데이터 형식(REST API)으로 통신
+ * 공연 컨트롤러
+ * API:
+ * POST /api/concerts              - 관리자 공연 정보 시스템 등록 (FN-BK-01)
+ * GET  /api/concerts              - 메인 화면 현재 상영 및 예정 공연 목록 페이징 조회 (FN-BK-02)
+ * GET  /api/concerts/{concertId} - 특정 공연 단일 상세 정보 및 티켓 상태 종합 조회 (FN-BK-03)
  */
 @Slf4j
 @RestController

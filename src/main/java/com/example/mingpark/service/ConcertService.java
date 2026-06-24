@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-
 public class ConcertService {
     private final ConcertRepository concertRepository;
     private final SeatRepository seatRepository;
@@ -35,7 +34,6 @@ public class ConcertService {
      * 전체 공연 목록을 보여줍니다.
      * @return 전체 공연 목록을 담은 DTO 리스트
      */
-
     public List<ConcertResponseDto> getAllConcerts(){
         List<Concert> concerts = concertRepository.findAll(); // 리스트 List<Concert> 라는 곳에 모든 Concert 테이블 데이터 넣음
 
@@ -126,7 +124,6 @@ public class ConcertService {
         }
 
         seat.changeStatus(SeatStatus.HOLD);
-
         seatRepository.save(seat);
     }
 }
