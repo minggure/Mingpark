@@ -1,2 +1,2 @@
-### 1. 정상적인 조회 테스트 (결과는 [] 빈 배열이 나와야 정상)
-GET http://localhost:8080/api/concerts/1/seats
+### 좌석 찜하기 테스트
+POST http://localhost:8080/api/concerts/1/seats/15/hold
