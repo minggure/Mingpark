@@ -50,22 +50,22 @@ public class MemberService {
      * @param loginDto 클라이언트로부터 전달받은 로그인 요청 정보 (아이디, 평문 비밀번호)
      * @return 인증에 성공 시 {@link Member} 엔티티 객체, 인증 실패 시(아이디 부재 또는 비밀번호 불일치) {@code null}
      */
-    public Member login(LoginRequestDto loginDto) {
-        // DB에서 로그인 아이디로 회원 조회
-        Optional<Member> findMemberOptional = memberRepository.findByLoginId(loginDto.getLoginId());
-
-        // 아이디가 없으면 로그인 실패(null)
-        if (findMemberOptional.isEmpty()) {
-            return null;
-        }
-
-        Member member = findMemberOptional.get();
-
-        // 비밀번호 검사 (틀리면 로그인 실패)
-        if (!passwordEncoder.matches(loginDto.getPassword(), member.getPassword())) {
-            return null; // 비밀번호가 일치하지 않으면 바로 컷!
-        }
-        // 성공하면 회원 정보 반환
-        return member;
-    }
+//    public Member login(LoginRequestDto loginDto) {
+//        // DB에서 로그인 아이디로 회원 조회
+//        Optional<Member> findMemberOptional = memberRepository.findByLoginId(loginDto.getLoginId());
+//
+//        // 아이디가 없으면 로그인 실패(null)
+//        if (findMemberOptional.isEmpty()) {
+//            return null;
+//        }
+//
+//        Member member = findMemberOptional.get();
+//
+//        // 비밀번호 검사 (틀리면 로그인 실패)
+//        if (!passwordEncoder.matches(loginDto.getPassword(), member.getPassword())) {
+//            return null; // 비밀번호가 일치하지 않으면 바로 컷!
+//        }
+//        // 성공하면 회원 정보 반환
+//        return member;
+//    }
 }

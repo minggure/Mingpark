@@ -11,6 +11,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import com.example.mingpark.security.CustomUserDetails;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 
 import java.util.Map;
 
@@ -19,6 +27,7 @@ import java.util.Map;
 public class MemberController {
 
     private final MemberService memberService;
+    private final AuthenticationManager authenticationManager;
 
     // 회원가입 API
     @PostMapping("/members/signup")
@@ -51,37 +60,69 @@ public class MemberController {
      * @param request 세션 획득과 로그인 상태 저장하는 HTTP 서블릿 요청 객체
      * @return 로그인 성공시 이름과 200(OK)응답 / 로그인 실패시 400(BADREQUSET)응답
      */
+//    @PostMapping("/members/login")
+//    public ResponseEntity<?> login(@RequestBody LoginRequestDto loginDto, HttpServletRequest request) {
+//
+//        Member loginMember = memberService.login(loginDto);
+//
+//        // 로그인 실패 시
+//        if (loginMember == null) {
+//            return ResponseEntity.badRequest().body(Map.of("status", "failed"));
+//        }
+
+//        // 로그인 성공 시 세션 저장
+//        HttpSession session = request.getSession();
+//        session.setAttribute("loginMember", loginMember);
+//
+//        return ResponseEntity.ok(Map.of(
+//                "status", "success",
+//                "memberName", loginMember.getName(),
+//                "role", loginMember.getRole().name()
+//                // 로그인 성공 응답에 role 추가
+//        ));
+//    }
     @PostMapping("/members/login")
     public ResponseEntity<?> login(@RequestBody LoginRequestDto loginDto, HttpServletRequest request) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginDto.getLoginId(),
+                            loginDto.getPassword()
+                    )
+            );
 
-        Member loginMember = memberService.login(loginDto);
+            SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+            securityContext.setAuthentication(authentication);
+            SecurityContextHolder.setContext(securityContext);
 
-        // 로그인 실패 시
-        if (loginMember == null) {
+            HttpSession session = request.getSession(true);
+            session.setAttribute(
+                    HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                    securityContext
+            );
+
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+            return ResponseEntity.ok(Map.of(
+                    "status", "success",
+                    "memberName", userDetails.getName(),
+                    "role", userDetails.getRole().name()
+            ));
+
+        } catch (AuthenticationException e) {
             return ResponseEntity.badRequest().body(Map.of("status", "failed"));
         }
-
-        // 로그인 성공 시 세션 저장
-        HttpSession session = request.getSession();
-        session.setAttribute("loginMember", loginMember);
-
-        return ResponseEntity.ok(Map.of(
-                "status", "success",
-                "memberName", loginMember.getName(),
-                "role", loginMember.getRole().name()
-                // 로그인 성공 응답에 role 추가
-        ));
     }
-
     // 로그아웃 API
     // 브라우저 localStorage, 서버 세션 제거
-    @PostMapping("/members/logout")
-    public ResponseEntity<?> logout(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            session.invalidate();
-        }
-
-        return ResponseEntity.ok(Map.of("status", "success"));
-    }
+    // 시큐리티 컨피그에 이미있음
+//    @PostMapping("/members/logout")
+//    public ResponseEntity<?> logout(HttpServletRequest request) {
+//        HttpSession session = request.getSession(false);
+//        if (session != null) {
+//            session.invalidate();
+//        }
+//
+//        return ResponseEntity.ok(Map.of("status", "success"));
+//    }
 }
