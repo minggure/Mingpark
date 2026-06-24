@@ -76,17 +76,6 @@ public class ConcertService {
         seatRepository.saveAll(seats);
     }// 입력 받은 정보를 DB에 자동으로 넣어줌
 
-
-    @Scheduled(fixedRate = 300000)
-    @Transactional
-    public void autoReleaseHoldSeats(){
-        List<Seat> holdSeats = seatRepository.findByStatus(SeatStatus.HOLD);
-
-        for(Seat seat : holdSeats){
-            seat.changeStatus(SeatStatus.AVAILABLE);
-        }
-        seatRepository.saveAll(holdSeats);
-    }
     /**
      * 사용자에게 보여주는 공연의 전체목록 페이징처리
      *
