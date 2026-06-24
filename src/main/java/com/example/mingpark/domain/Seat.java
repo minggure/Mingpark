@@ -59,3 +59,4 @@ public class Seat {
         this.status = status;
     }
 }
+

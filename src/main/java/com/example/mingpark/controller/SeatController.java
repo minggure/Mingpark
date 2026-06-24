@@ -35,4 +35,6 @@ public class SeatController {
 
     return ResponseEntity.ok(seats);
 }
+
 }
+
