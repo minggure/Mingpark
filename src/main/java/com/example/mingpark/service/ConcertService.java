@@ -3,17 +3,21 @@ package com.example.mingpark.service;
 
 import com.example.mingpark.domain.Concert;
 import com.example.mingpark.domain.ConcertStatus;
+import com.example.mingpark.domain.Seat;
+import com.example.mingpark.domain.SeatStatus;
 import com.example.mingpark.dto.ConcertCreatRequestDto;
 import com.example.mingpark.dto.ConcertDetailResponseDto;
 import com.example.mingpark.dto.ConcertResponseDto;
 import com.example.mingpark.exception.ConcertNotFoundException;
 import com.example.mingpark.repository.ConcertRepository;
+import com.example.mingpark.repository.SeatRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,6 +27,7 @@ import java.util.stream.Collectors;
 
 public class ConcertService {
     private final ConcertRepository concertRepository;
+    private final SeatRepository seatRepository;
 
     /**
      * 전체 공연 목록을 보여줍니다.
@@ -86,5 +91,18 @@ public class ConcertService {
                 .orElseThrow(() -> new ConcertNotFoundException(concertId));
 
         return new ConcertDetailResponseDto(concert);
+    }
+    @Transactional
+    public void processHoldSeat( Long seatId, Long Id){
+        Seat seat = seatRepository.findById(seatId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 좌석입니다."));
+
+        if(seat.getStatus() != SeatStatus.AVAILABLE){
+            throw new IllegalArgumentException("DB 확인 결과 이미 예약된 좌석입니다.");
+        }
+
+        seat.changeStatus(SeatStatus.HOLD);
+
+        seatRepository.save(seat);
     }
 }
