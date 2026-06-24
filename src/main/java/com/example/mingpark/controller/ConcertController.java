@@ -1,12 +1,14 @@
 package com.example.mingpark.controller;
 
-import com.example.mingpark.domain.Member;
-import com.example.mingpark.domain.MemberRole;
+//import com.example.mingpark.domain.Member;
+// com.example.mingpark.domain.MemberRole;
 import com.example.mingpark.dto.ConcertCreatRequestDto;
 import com.example.mingpark.dto.ConcertDetailResponseDto;
 import com.example.mingpark.dto.ConcertResponseDto;
 import com.example.mingpark.facade.HoldLockFacade;
 import com.example.mingpark.service.ConcertService;
+//import jakarta.servlet.http.HttpServletRequest;
+//import jakarta.servlet.http.HttpSession;
 import jakarta.persistence.Id;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -47,9 +49,9 @@ public class ConcertController {
             HttpServletRequest httpRequest
     ) {
         // 공연 등록 API에서 세션의 로그인 회원을 꺼내고, role이 ADMIN인지 확인
-        if (!isAdmin(httpRequest)) {
-            return ResponseEntity.status(403).body("관리자만 공연을 등록할 수 있습니다.");
-        }
+//        if (!isAdmin(httpRequest)) {
+//            return ResponseEntity.status(403).body("관리자만 공연을 등록할 수 있습니다.");
+//        }
 
         concertService.createConcert(request);
         return ResponseEntity.ok("공연 등록 완료");
@@ -81,6 +83,21 @@ public class ConcertController {
     public ConcertDetailResponseDto getConcertDetailApi(@PathVariable Long concertId) {
         return concertService.getConcertDetail(concertId);
     }
+    
+//    private boolean isAdmin(HttpServletRequest request) {
+//        HttpSession session = request.getSession(false);
+//        if (session == null) {
+//            return false;
+//        }
+//
+//        Object loginMember = session.getAttribute("loginMember");
+//        if (!(loginMember instanceof Member member)) {
+//            return false;
+//        }
+//
+//        return member.getRole() == MemberRole.ADMIN;
+//    }
+}
 
     private boolean isAdmin(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
