@@ -1,6 +1,7 @@
 package com.example.mingpark.repository;
 
 import com.example.mingpark.domain.Seat;
+import com.example.mingpark.domain.SeatStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -15,4 +16,6 @@ public interface SeatRepository extends JpaRepository<Seat, Long> {
      * @return 해당 공연에 속한 좌석 리스트
      */
     List<Seat> findAllByConcert_ConcertId(Long concertId);
+    List<Seat> findByStatus(SeatStatus status);
+
 }

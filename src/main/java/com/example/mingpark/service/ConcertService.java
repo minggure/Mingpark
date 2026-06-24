@@ -16,9 +16,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -63,7 +65,29 @@ public class ConcertService {
                 .image(request.getImage())
                 .build();
 
-        concertRepository.save(concert); // 입력 받은 정보를 DB에 자동으로 넣어줌
+        concertRepository.save(concert);
+        List<Seat> seats = new ArrayList<>();
+        for (int i = 1; i <= 50; i++) {
+            seats.add(Seat.builder()
+                    .concert(concert)       // 방금 저장한 공연 객체 연결
+                    .seatNumber(i)          // 1번부터 50번까지
+                    .status(SeatStatus.AVAILABLE) // 기본 상태는 예매 가능
+                    .build());
+        }
+        // 3. 50개의 좌석 한 번에 DB 저장
+        seatRepository.saveAll(seats);
+    }// 입력 받은 정보를 DB에 자동으로 넣어줌
+
+
+    @Scheduled(fixedRate = 300000)
+    @Transactional
+    public void autoReleaseHoldSeats(){
+        List<Seat> holdSeats = seatRepository.findByStatus(SeatStatus.HOLD);
+
+        for(Seat seat : holdSeats){
+            seat.changeStatus(SeatStatus.AVAILABLE);
+        }
+        seatRepository.saveAll(holdSeats);
     }
     /**
      * 사용자에게 보여주는 공연의 전체목록 페이징처리
@@ -93,7 +117,7 @@ public class ConcertService {
         return new ConcertDetailResponseDto(concert);
     }
     @Transactional
-    public void processHoldSeat( Long seatId, Long Id){
+    public void processHoldSeat(Long seatId, Long memberId){
         Seat seat = seatRepository.findById(seatId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 좌석입니다."));
 
