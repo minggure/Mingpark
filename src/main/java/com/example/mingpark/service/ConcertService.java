@@ -8,6 +8,7 @@ import com.example.mingpark.domain.SeatStatus;
 import com.example.mingpark.dto.ConcertCreatRequestDto;
 import com.example.mingpark.dto.ConcertDetailResponseDto;
 import com.example.mingpark.dto.ConcertResponseDto;
+import com.example.mingpark.dto.SeatResponseDto;
 import com.example.mingpark.exception.ConcertNotFoundException;
 import com.example.mingpark.repository.ConcertRepository;
 import com.example.mingpark.repository.SeatRepository;
@@ -16,9 +17,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,18 +29,6 @@ import java.util.stream.Collectors;
 public class ConcertService {
     private final ConcertRepository concertRepository;
     private final SeatRepository seatRepository;
-
-    /**
-     * 전체 공연 목록을 보여줍니다.
-     * @return 전체 공연 목록을 담은 DTO 리스트
-     */
-    public List<ConcertResponseDto> getAllConcerts(){
-        List<Concert> concerts = concertRepository.findAll(); // 리스트 List<Concert> 라는 곳에 모든 Concert 테이블 데이터 넣음
-
-        return concerts.stream()
-                .map(ConcertResponseDto::new)
-                .collect(Collectors.toList());
-    }
     /**
      * 페이지로부터 전달 받은 공연 등록 정보(DTO)를 받아 공연 엔티티를 생성하여 DB에 저장합니다
      * 생성시 공연의 기본 상태는 ON_SALE로 고정
@@ -103,16 +91,5 @@ public class ConcertService {
 
         return new ConcertDetailResponseDto(concert);
     }
-    @Transactional
-    public void processHoldSeat(Long seatId, Long memberId){
-        Seat seat = seatRepository.findById(seatId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 좌석입니다."));
 
-        if(seat.getStatus() != SeatStatus.AVAILABLE){
-            throw new IllegalArgumentException("DB 확인 결과 이미 예약된 좌석입니다.");
-        }
-
-        seat.changeStatus(SeatStatus.HOLD);
-        seatRepository.save(seat);
-    }
 }

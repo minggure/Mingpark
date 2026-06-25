@@ -16,6 +16,5 @@ public interface SeatRepository extends JpaRepository<Seat, Long> {
      * @return 해당 공연에 속한 좌석 리스트
      */
     List<Seat> findAllByConcert_ConcertId(Long concertId);
-    List<Seat> findByStatus(SeatStatus status);
 
 }

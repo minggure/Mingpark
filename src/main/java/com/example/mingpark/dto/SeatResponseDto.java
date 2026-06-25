@@ -21,6 +21,13 @@ public class SeatResponseDto {
         this.seatNumber = seat.getSeatNumber();
         this.status = seat.getStatus().name();
     }
+
+    public SeatResponseDto(Long id, int seatNumber, String currentStatus) {
+        this.seatId = id;
+        this.seatNumber = seatNumber;
+        this.status = currentStatus;
+    }
+
     //Redis 선점에 따라 변화하는 Status. setter 사용하는 대신 status만 생성자 만들기
     public void changeStatus(String status) {
         this.status = status;

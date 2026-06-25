@@ -35,7 +35,7 @@ public class SeatReservationService {
 
         if (Boolean.TRUE.equals(success)) {
             // 선점에 성공한 유저를 위해, 3분 뒤 데이터가 자동 소멸되도록 만료 시간(TTL)을 지정
-            redisTemplate.expire(redisKey, 3, TimeUnit.MINUTES);
+            redisTemplate.expire(redisKey, 10, TimeUnit.SECONDS);
             return true;
         }
 

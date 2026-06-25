@@ -5,8 +5,6 @@ import com.example.mingpark.facade.HoldLockFacade;
 import com.example.mingpark.security.CustomUserDetails;
 import com.example.mingpark.service.SeatReservationService;
 import com.example.mingpark.service.SeatService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +42,7 @@ public class SeatController {
     @GetMapping("/{concertId}/seats")
     public ResponseEntity<List<SeatResponseDto>> getSeats(
             @PathVariable @Positive(message = "공연 ID는 양수여야 합니다.") Long concertId) {
-        List<SeatResponseDto> seats = seatService.getSeatsByConcertId(concertId);
+        List<SeatResponseDto> seats = seatService.getSeats(concertId);
         return ResponseEntity.ok(seats);
     }
     /**
@@ -72,7 +70,7 @@ public class SeatController {
 
         try {
             // 분산 락 및 DB HOLD 선점 처리를 원자적으로 일괄 처리
-            holdLockFacade.holdSeat(seatId, memberId);
+            holdLockFacade.holdSeat(seatId,memberId);
 
             return ResponseEntity.ok(Map.of(
                     "status", "success",
