@@ -195,6 +195,36 @@
 </div>
 
 <script>
+    // 1. 서버에서 좌석 상태를 가져와서 화면에 그리는 함수
+    async function initSeats() {
+        try {
+            // 서버에 좌석 상태 조회 API 요청 (구현되어 있다고 가정)
+            const response = await fetch(`/api/concerts/${currentConcertId}/seats`);
+            const seats = await response.json(); // [{id: 1, status: 'AVAILABLE'}, ...]
+
+            seatMap.innerHTML = '';
+            seats.forEach(seat => {
+                const seatDiv = document.createElement('div');
+
+                // 상태에 따른 클래스 부여
+                let statusClass = 'seat-available';
+                if (seat.status === 'HOLD') statusClass = 'seat-hold';
+                if (seat.status === 'RESERVED') statusClass = 'seat-reserved';
+
+                seatDiv.className = `seat ${statusClass}`;
+                seatDiv.innerText = seat.seatNumber;
+
+                // 예매 가능한 좌석만 클릭 이벤트 연결
+                if (seat.status === 'AVAILABLE') {
+                    seatDiv.onclick = () => executeReservation(currentConcertId, seat.id, seatDiv);
+                }
+
+                seatMap.appendChild(seatDiv);
+            });
+        } catch (e) {
+            console.error("좌석 정보를 불러오는데 실패했습니다.", e);
+        }
+    }
     let currentPage = 0;
     let targetConcertId = null;
 
@@ -365,6 +395,9 @@
         loadSeats();
     }
 
+
+
+
     function loadSeats() {
         const zoneA = document.getElementById("zone-A");
         const zoneB = document.getElementById("zone-B");
@@ -392,7 +425,7 @@
                         seatDiv.onclick = () => {
                             if (confirm(`${seat.seatNumber}번 좌석을 5분간 임시 선점하시겠습니까?`)) {
                                 // 새로운 검증 규격에 맞게 좌석 번호 대신 seatId를 직접 전달합니다.
-                                tryOccupySeat(seat.seatId);
+                                tryOccupySeat(targetConcertId,seat.seatId);
                             }
                         };
                     }
@@ -404,53 +437,36 @@
     }
 
     // redis 선점 추가 : 결제창 넘어가기 전 Redis에 3분 알람 시계를 등록하는 비동기 가드 함수
-    function tryOccupySeat(seatId) {
-        fetch(`/api/concerts/${targetConcertId}/seats/${seatId}/hold`, {
+    function tryOccupySeat(concertId, seatId) {
+        fetch(`/api/concerts/${concertId}/seats/${seatId}/hold`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
         })
-            .then(res => {
+            .then(async res => {
                 if (res.status === 401) {
-                    alert("로그인이 필요합니다."); closeModal('seat-modal'); openModal('login-modal');
-                    throw new Error("비로그인");
-                }
-                if (res.status === 400) {
-                    return res.json().then(data => {
-                        alert(data.message);
-                        loadSeats(); // 좌석판 동기화
-                        throw new Error("선점 실패");
-                    });
-                }
-                return res.json();
-            })
-            .then(result => {
-                if (result.status === 'success') {
-                    alert(result.message);
-                    // 선점 가드를 정상 통과했으므로 최종 MySQL 예매 확정 프로세스로 진입
-                    executeReservation(seatId);
-                }
-            })
-            .catch(err => console.log("파사드 가드 작동 차단 완료"));
-    }
-
-    function executeReservation(seatId) {
-        fetch(`/api/reservations`, {
-            method: "POST",
-            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            body: JSON.stringify({ concertId: targetConcertId, seatId: seatId })
-        })
-            .then(res => {
-                if (res.status === 401) {
-                    alert("로그인이 필요합니다."); closeModal('seat-modal'); openModal('login-modal');
+                    alert("로그인이 필요합니다.");
+                    closeModal('seat-modal');
+                    openModal('login-modal');
                     return;
                 }
-                return res.json();
+
+                const result = await res.json();
+
+                if (res.ok || result.status === 'success') {
+                    alert("선점이 완료되었습니다! (5분간 유지)");
+                    closeModal('seat-modal');
+
+                } else {
+                    alert(result.message || "좌석 선점에 실패했습니다.");
+                    loadSeats();
+                }
             })
-            .then(() => {
-                alert("선점이 완료되었습니다!");
-                closeModal('seat-modal');
+            .catch(err => {
+                console.error("통신 에러:", err);
             });
     }
+
 
     function renderPagination(totalPages) {
         const pageContainer = document.getElementById('pagination');
