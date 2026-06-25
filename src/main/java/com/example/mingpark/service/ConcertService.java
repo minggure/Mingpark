@@ -16,7 +16,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,16 +26,14 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-
 public class ConcertService {
     private final ConcertRepository concertRepository;
     private final SeatRepository seatRepository;
-    private final RedisTemplate<String, String> redisTemplate;
+
     /**
      * 전체 공연 목록을 보여줍니다.
      * @return 전체 공연 목록을 담은 DTO 리스트
      */
-
     public List<ConcertResponseDto> getAllConcerts(){
         List<Concert> concerts = concertRepository.findAll(); // 리스트 List<Concert> 라는 곳에 모든 Concert 테이블 데이터 넣음
 
@@ -78,28 +75,6 @@ public class ConcertService {
         // 3. 50개의 좌석 한 번에 DB 저장
         seatRepository.saveAll(seats);
     }// 입력 받은 정보를 DB에 자동으로 넣어줌
-    @Scheduled(fixedDelay = 10000)//10000 -> 10초주기
-    @Transactional
-    public void cleanupExpiredSeats() {
-        List<Seat> holdSeats = seatRepository.findByStatus(SeatStatus.HOLD);
-
-        if (holdSeats.isEmpty()) {
-            return;
-        }
-
-        int releaseCount = 0;
-        for (Seat seat : holdSeats) {
-            // HoldLockFacade에서 사용 중인 레디스 락 키 규격을 매칭합니다.
-            String lockKey = "lock:seat::" + seat.getId();
-            Boolean hasKey = redisTemplate.hasKey(lockKey);
-
-            // Redis 장부에서 키가 지워져서 존재하지 않는다면(FALSE) 만료된 자원입니다.
-            if (Boolean.FALSE.equals(hasKey)) {
-                seat.changeStatus(SeatStatus.AVAILABLE);
-                releaseCount++;
-            }
-        }}
-
 
     /**
      * 사용자에게 보여주는 공연의 전체목록 페이징처리
@@ -138,7 +113,6 @@ public class ConcertService {
         }
 
         seat.changeStatus(SeatStatus.HOLD);
-
         seatRepository.save(seat);
     }
 }
