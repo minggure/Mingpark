@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-
 public class ConcertService {
     private final ConcertRepository concertRepository;
     private final SeatRepository seatRepository;
@@ -35,7 +34,6 @@ public class ConcertService {
      * 전체 공연 목록을 보여줍니다.
      * @return 전체 공연 목록을 담은 DTO 리스트
      */
-
     public List<ConcertResponseDto> getAllConcerts(){
         List<Concert> concerts = concertRepository.findAll(); // 리스트 List<Concert> 라는 곳에 모든 Concert 테이블 데이터 넣음
 
@@ -78,17 +76,6 @@ public class ConcertService {
         seatRepository.saveAll(seats);
     }// 입력 받은 정보를 DB에 자동으로 넣어줌
 
-
-    @Scheduled(fixedRate = 300000)
-    @Transactional
-    public void autoReleaseHoldSeats(){
-        List<Seat> holdSeats = seatRepository.findByStatus(SeatStatus.HOLD);
-
-        for(Seat seat : holdSeats){
-            seat.changeStatus(SeatStatus.AVAILABLE);
-        }
-        seatRepository.saveAll(holdSeats);
-    }
     /**
      * 사용자에게 보여주는 공연의 전체목록 페이징처리
      *
@@ -126,7 +113,6 @@ public class ConcertService {
         }
 
         seat.changeStatus(SeatStatus.HOLD);
-
         seatRepository.save(seat);
     }
 }
