@@ -398,34 +398,41 @@
 
 
 
+    // 1. 좌석판 그리기 (백엔드에서 DB+Redis 조합 결과를 받아옴)
     function loadSeats() {
+        if (!targetConcertId) return;
+
         const zoneA = document.getElementById("zone-A");
         const zoneB = document.getElementById("zone-B");
-        zoneA.innerHTML = "동기화 중..."; zoneB.innerHTML = "동기화 중...";
+        zoneA.innerHTML = "동기화 중...";
+        zoneB.innerHTML = "동기화 중...";
 
-        fetch(`/api/concerts/${targetConcertId}/seats`)
+        fetch(`/api/concerts/${targetConcertId}/seats`, { credentials: 'include' })
             .then(res => {
                 if (res.status === 401) {
-                    localStorage.removeItem("loginMemberName"); checkLoginStatus();
                     alert("세션이 만료되었습니다. 다시 로그인해 주세요.");
-                    closeModal('seat-modal'); openModal('login-modal');
-                    throw new Error();
+                    closeModal('seat-modal');
+                    openModal('login-modal');
+                    throw new Error("Unauthorized");
                 }
                 return res.json();
             })
             .then(data => {
-                zoneA.innerHTML = ""; zoneB.innerHTML = "";
+                console.log("서버에서 받은 최신 좌석 데이터:", data);
+                zoneA.innerHTML = "";
+                zoneB.innerHTML = "";
+
                 data.forEach(seat => {
                     const seatDiv = document.createElement("div");
                     seatDiv.className = `seat ${seat.status}`;
                     seatDiv.innerText = seat.seatNumber;
 
-                    // 1단계: 빈자리(AVAILABLE)인 포도알을 클릭했을 때 로직 수정
+                    // 빈자리(AVAILABLE)일 때만 클릭 이벤트 부여
                     if (seat.status === 'AVAILABLE') {
                         seatDiv.onclick = () => {
                             if (confirm(`${seat.seatNumber}번 좌석을 5분간 임시 선점하시겠습니까?`)) {
-                                // 새로운 검증 규격에 맞게 좌석 번호 대신 seatId를 직접 전달합니다.
-                                tryOccupySeat(targetConcertId,seat.seatId);
+                                // 💡 정확하게 concertId와 seatId 두 개를 넘겨줍니다.
+                                tryOccupySeat(targetConcertId, seat.seatId);
                             }
                         };
                     }
@@ -433,11 +440,13 @@
                     if (seat.seatNumber <= 25) zoneA.appendChild(seatDiv);
                     else zoneB.appendChild(seatDiv);
                 });
-            });
+            })
+            .catch(err => console.error("좌석 로딩 실패:", err));
     }
 
-    // redis 선점 추가 : 결제창 넘어가기 전 Redis에 3분 알람 시계를 등록하는 비동기 가드 함수
+    // 2. 단일화된 좌석 선점 함수 (이거 하나로 끝!)
     function tryOccupySeat(concertId, seatId) {
+        // 💡 백틱(``)을 사용하여 정확한 주소로 POST 요청
         fetch(`/api/concerts/${concertId}/seats/${seatId}/hold`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -453,17 +462,23 @@
 
                 const result = await res.json();
 
-                if (res.ok || result.status === 'success') {
+                // HTTP 200번대 정상 응답 시
+                if (res.ok) {
                     alert("선점이 완료되었습니다! (5분간 유지)");
+                    // 선점 성공 시 예매 창으로 넘어가거나 좌석판을 닫습니다.
                     closeModal('seat-modal');
-
-                } else {
-                    alert(result.message || "좌석 선점에 실패했습니다.");
-                    loadSeats();
+                    // 필요하다면 여기서 결제 페이지로 이동하는 로직을 추가하세요.
+                    // 예: location.href = `/payment.html?seatId=${seatId}`;
+                }
+                // 400, 409 등 서버에서 에러(이미 점유됨 등)를 뱉었을 때
+                else {
+                    alert(result.message || "아쉽습니다! 이미 다른 분이 선택한 좌석입니다.");
+                    loadSeats(); // 누군가 먼저 낚아챘으므로 최신 좌석판으로 새로고침
                 }
             })
             .catch(err => {
                 console.error("통신 에러:", err);
+                alert("서버와의 연결이 원활하지 않습니다.");
             });
     }
 

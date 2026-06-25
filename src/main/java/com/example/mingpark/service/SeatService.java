@@ -1,9 +1,12 @@
 package com.example.mingpark.service;
 
 import com.example.mingpark.domain.Seat;
+import com.example.mingpark.domain.SeatStatus;
 import com.example.mingpark.dto.SeatResponseDto;
+import com.example.mingpark.facade.HoldLockFacade;
 import com.example.mingpark.repository.SeatRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +19,7 @@ import java.util.stream.Collectors;
 
 public class SeatService {
     private final SeatRepository seatRepository;
+    private final StringRedisTemplate redisTemplate;
 
     /**
      * 특정 공연에 해당하는 모든 좌석의 상태를 조회한다.
@@ -28,9 +32,30 @@ public class SeatService {
         List<Seat> rawSeats = seatRepository.findAllByConcert_ConcertId(concertId);
 
 
+        /**
+         * rawSeats 는 현재 좌석 전체
+         * stream() 처리할 목록을 일렬로 정리
+         * map() 정리한 데이터를 하나씩 가져와 객체 생성
+         * collect 다시 모아서 담는것
+         */
         return rawSeats.stream()
                 .map(SeatResponseDto::new)
                 .collect(Collectors.toList());
+    }
+    public List<SeatResponseDto> getSeats(Long concertId) {
+        List<Seat> seats = seatRepository.findAllByConcert_ConcertId(concertId);
+
+        return seats.stream().map(seat -> {
+
+            String lockKey = "lock:seat:" + seat.getId();
+            String currentStatus = seat.getStatus().name();
+
+            if (seat.getStatus() != SeatStatus.RESERVED && Boolean.TRUE.equals(redisTemplate.hasKey(lockKey))) {
+                currentStatus = "HOLD";
+            }
+
+            return new SeatResponseDto(seat.getId(), seat.getSeatNumber(), currentStatus);
+        }).collect(Collectors.toList());
     }
 
 }
