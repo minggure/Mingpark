@@ -29,8 +29,6 @@ public class HoldLockFacade {
         }
 
         log.info("좌석 임시 점유 성공 - seatId={} , requestUser={}", seatId, memberId);
-
-
         }
 
     }

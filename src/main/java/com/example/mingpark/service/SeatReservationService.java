@@ -30,11 +30,9 @@ public class SeatReservationService {
     public boolean occupySeat(Long concertId, int seatNumber, Long memberId) {
         String redisKey = SEAT_KEY_PREFIX + concertId + "::" + seatNumber;
 
-        // setIfAbsent는 Redis의 SETNX 명령어로 작동
         Boolean success = redisTemplate.opsForValue().setIfAbsent(redisKey, String.valueOf(memberId));
 
         if (Boolean.TRUE.equals(success)) {
-            // 선점에 성공한 유저를 위해, 3분 뒤 데이터가 자동 소멸되도록 만료 시간(TTL)을 지정
             redisTemplate.expire(redisKey, 10, TimeUnit.SECONDS);
             return true;
         }

@@ -6,7 +6,9 @@ import lombok.RequiredArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-
+/**
+ * 공연 등록 요청 DTO.
+ */
 @Getter
 @RequiredArgsConstructor
 // 공연 등록 화면에서 JSON으로 전달하는 기본 정보와 상세 페이지용 정보를 함께 받는다.

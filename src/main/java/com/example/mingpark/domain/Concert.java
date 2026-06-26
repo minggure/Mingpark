@@ -14,6 +14,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+/**
+ * 공연 정보 엔티티 (CONCERTS 테이블 매핑)
+ * 공연 기본 정보, 소개 문구, 예매 가능 기간 및 공연 진행 상태 관리.
+ */
 @Builder
 @AllArgsConstructor
 @Entity
@@ -68,13 +72,19 @@ public class Concert {
         this.concertPrice = concertPrice;
     }
 
+    /**
+     * 공연의 진행 상태를 변경 처리.
+     *
+     * @param status 변경할 공연 상태 값 (UPCOMING, ON_SALE, ENDED 등)
+     */
     public void changeStatus(ConcertStatus status) {
         this.status = status;
     }
 
     /**
-     * 공연 상태와 예매 기간을 함께 확인해 현재 예매 가능한 공연인지 판단한다.
+     * 현재 시점 기준으로 예매 가능 여부를 판단
      * 예매 기간이 등록되지 않은 기존 공연은 예매 불가능으로 처리한다.
+     * @return 예매 가능 시 true, 불가능 시 false 반환
      */
     public boolean isReservationAvailable() {
         if (status != ConcertStatus.ON_SALE

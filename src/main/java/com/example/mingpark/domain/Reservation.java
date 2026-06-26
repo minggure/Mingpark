@@ -7,28 +7,28 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
-//테스트용
+/**
+ * 예매 정보 엔티티 (RESERVATION 테이블 매핑)
+ * 회원별 특정 공연 및 좌석에 대한 예매 상태, 결제 금액, 선점 만료 시각 및 상태별 변경 일시 관리.
+ */
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "reservation")
 @Getter
 public class Reservation {
-    @Id // // PK
-    @GeneratedValue(strategy = GenerationType.IDENTITY) //Auto Increment!
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "reservation_id")
     private Long id;
 
-    //  FK 1: 회원 (N:1 관계)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    //  FK 2: 공연 (N:1 관계)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "concert_id", nullable = false)
     private Concert concert;
 
-    //  FK 3: 좌석 (N:1 관계)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seat_id", nullable = false)
     private Seat seat;
