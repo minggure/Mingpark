@@ -8,7 +8,6 @@ import com.example.mingpark.domain.SeatStatus;
 import com.example.mingpark.dto.ConcertCreatRequestDto;
 import com.example.mingpark.dto.ConcertDetailResponseDto;
 import com.example.mingpark.dto.ConcertResponseDto;
-import com.example.mingpark.dto.SeatResponseDto;
 import com.example.mingpark.exception.ConcertNotFoundException;
 import com.example.mingpark.repository.ConcertRepository;
 import com.example.mingpark.repository.SeatRepository;
@@ -17,25 +16,25 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
+/**
+ * 공연 정보 및 연동 좌석 생성·조회 비즈니스 로직 서비스.
+ */
 @Service
 @RequiredArgsConstructor
 public class ConcertService {
     private final ConcertRepository concertRepository;
     private final SeatRepository seatRepository;
+
     /**
      * 페이지로부터 전달 받은 공연 등록 정보(DTO)를 받아 공연 엔티티를 생성하여 DB에 저장합니다
      * 생성시 공연의 기본 상태는 ON_SALE로 고정
-     * @param request 등록할 공연의 제목 날짜 시간 가격 등 상세 정보가 담긴 DTO 객체
-     *
+     * @param request 등록할 공연 상세 정보 DTO
      */
-    
     public void createConcert(ConcertCreatRequestDto request){
         Concert concert = Concert.builder()
                 .concertTitle(request.getConcertTitle())
@@ -81,7 +80,7 @@ public class ConcertService {
     // 상세 페이지 요청에 사용되는 공연 한 건을 ID로 조회한다.
 
     /**
-     *
+     * 고유 식별 ID 기반 특정 공연 상세 정보 단일 조회 처리.
      * @param concertId 조회할 공연의 고유 식별자 (PK)
      * @return 공연 상세 정보가 담긴 Dto 반환
      */

@@ -10,7 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 /**
- * 애플리케이션 실행 시 관리자 계정을 초기화하는 클래스.
+ * 시스템 관리자 계정 초기화 및 동기화 컴포넌트.
  *
  * 환경변수에 관리자 정보가 설정되어 있으면:
  * 1. 해당 아이디의 회원이 이미 존재할 경우 관리자 권한과 비밀번호를 갱신한다.
@@ -23,25 +23,26 @@ public class AdminAccountInitializer implements CommandLineRunner {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // 환경변수 ADMIN_LOGIN_ID 값을 관리자 로그인 아이디로 주입
-    // 값이 없으면 빈 문자열("")을 기본값으로 사용
+    /** 관리자 인증용 고유 로그인 식별 ID (환경변수 주입, 누락 시 빈 문자열 처리로 예외 방지) */
     @Value("${ADMIN_LOGIN_ID:}")
     private String adminLoginId;
 
-    // 환경변수 ADMIN_PASSWORD 값을 관리자 비밀번호로 주입
+    /** 관리자 인증용 원시 비밀번호 (암호화 컴포넌트 연동 대상) */
     @Value("${ADMIN_PASSWORD:}")
     private String adminPassword;
 
-    // 관리자 이메일로 주입
+    /** 시스템 관리자 연락처 및 알림용 이메일 주소 */
     @Value("${ADMIN_EMAIL:}")
     private String adminEmail;
 
-    // 관리자 이름은 별도 설정이 없으면 "관리자"를 기본값으로 사용
+    /** 관리자 프로필 표시용 성명 (별도 지정 없을 시 기본값 '관리자'로 폴백) */
     @Value("${ADMIN_NAME:관리자}")
     private String adminName;
 
     /**
-     * Spring Boot 실행이 완료된 직후 자동으로 실행
+     * 애플리케이션 구동 후 관리자 데이터 영속화 처리.
+     *
+     * @param args 커맨드 라인 인자
      */
     @Override
     public void run(String... args) {

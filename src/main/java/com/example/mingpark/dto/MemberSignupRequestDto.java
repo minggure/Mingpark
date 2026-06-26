@@ -5,7 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-
+/**
+ * 회원 가입 요청 DTO.
+ */
 @Getter
 @RequiredArgsConstructor
 public class MemberSignupRequestDto {

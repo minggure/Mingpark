@@ -20,9 +20,9 @@ import java.util.Map;
 /**
  * 좌석 통제 및 임시 선점 컨트롤러
  * API:
- * GET    /api/concerts/{concertId}/seats                   - 특정 공연의 전체 좌석 현황 조회 (FN-SEAT-01)
- * POST   /api/concerts/{concertId}/seats/{seatId}/hold     - 특정 좌석 5분 임시 선점 분산 락 (FN-SEAT-02)
- * DELETE /api/concerts/{concertId}/seats/{seatId}/hold     - 임시 선점 수동 해제 (FN-SEAT-03)
+ * GET    /api/concerts/{concertId}/seats                   - 특정 공연의 전체 좌석 현황 조회
+ * POST   /api/concerts/{concertId}/seats/{seatId}/hold     - 특정 좌석 5분 임시 선점 분산 락
+ * DELETE /api/concerts/{concertId}/seats/{seatId}/hold     - 임시 선점 수동 해제
  */
 @Slf4j
 @RestController

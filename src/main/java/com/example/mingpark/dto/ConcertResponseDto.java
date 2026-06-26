@@ -7,9 +7,10 @@ import lombok.Getter;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+/**
+ * 공연 목록 정보 응답 DTO.
+ */
 @Getter
-
-// 공연 목록 카드에 필요한 요약 정보만 전달한다.
 public class ConcertResponseDto {
     private final Long concertId;
     private final String concertTitle;
@@ -19,7 +20,11 @@ public class ConcertResponseDto {
     private final LocalDate concertDate;
     private final int concertPrice;
 
-    // Concert 엔티티를 목록 화면용 응답으로 변환한다.
+    /**
+     * Concert 엔티티 데이터를 목록 응답 규격으로 변환 처리.
+     *
+     * @param concert 공연 엔티티 객체
+     */
     public ConcertResponseDto(Concert concert) {
         this.concertId = concert.getConcertId();
         this.concertTitle = concert.getConcertTitle();

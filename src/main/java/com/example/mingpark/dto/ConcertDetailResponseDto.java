@@ -8,8 +8,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 /**
- * 공연 상세 화면에 필요한 정보를 전달하는 응답 DTO.
- * 목록 응답과 분리해 설명, 장소, 예매 기간 같은 상세 정보만 이곳에서 관리한다.
+ * 공연 상세 정보 응답 DTO.
  */
 @Getter
 public class ConcertDetailResponseDto {
@@ -26,7 +25,11 @@ public class ConcertDetailResponseDto {
     private final LocalDateTime reservationEndAt;
     private final boolean reservationAvailable;
 
-    // 엔티티를 화면에 직접 노출하지 않고 상세 화면 전용 데이터로 변환한다.
+    /**
+     * Concert 엔티티 데이터를 응답 규격으로 변환 처리.
+     *
+     * @param concert 공연 엔티티 객체
+     */
     public ConcertDetailResponseDto(Concert concert) {
         this.concertId = concert.getConcertId();
         this.concertTitle = concert.getConcertTitle();

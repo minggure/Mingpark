@@ -6,7 +6,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-
+/**
+ * 회원 정보 엔티티
+ * 회원 기본 프로필, 로그인 계정 정보, 예매 포인트 및 권한 등급 관리.
+ */
 @Entity
 @Table(name = "members")
 @Getter
@@ -37,7 +40,6 @@ public class Member {
     @Column(nullable = false, length = 20)
     private MemberRole role;
 
-    //회원가입 할 때 사용할 생성자 수정시 커밋메시지
     @Builder
     public Member(String name, String loginId, String password, String email, MemberRole role){
         this.name = name;
@@ -49,11 +51,19 @@ public class Member {
 
     }
 
-    // 기존의 admin 계정에 role 을 바꿔 관리자 계정으로 만들어주는 메소드
+    /**
+     * 회원의 권한 등급(Role)을 변경 처리.
+     *
+     * @param role 변경할 회원 권한 등급 값 (USER, ADMIN 등)
+     */
     public void changeRole(MemberRole role) {
         this.role = role;
     }
-
+    /**
+     * 회원의 비밀번호를 변경 처리.
+     *
+     * @param password 변경할 암호화된 새 비밀번호 문자열
+     */
     public void changePassword(String password) {
         this.password = password;
     }

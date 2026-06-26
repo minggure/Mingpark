@@ -11,9 +11,10 @@ import java.util.List;
  */
 public interface SeatRepository extends JpaRepository<Seat, Long> {
     /**
-     * 공연 ID를 기준으로 해당 공연의 모든 좌석을 조회한다.
+     * 공연 ID를 기준으로 해당 공연 좌석 전체 조회.
+     *
      * @param concertId 공연 식별자
-     * @return 해당 공연에 속한 좌석 리스트
+     * @return 해당 공연에 속한 좌석 엔티티 리스트 반환
      */
     List<Seat> findAllByConcert_ConcertId(Long concertId);
 

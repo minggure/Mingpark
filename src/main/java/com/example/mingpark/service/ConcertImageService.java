@@ -16,7 +16,6 @@ import java.util.UUID;
 @Service
 public class ConcertImageService {
 
-    // 허용할 MIME 타입과 저장할 파일 확장자를 함께 관리한다.
     private static final Map<String, String> IMAGE_EXTENSIONS = Map.of(
             "image/jpeg", ".jpg",
             "image/png", ".png",
@@ -26,6 +25,8 @@ public class ConcertImageService {
 
     /**
      * 붙여넣은 이미지를 서버 uploads 폴더에 저장하고 화면에서 사용할 경로를 반환한다.
+     * @param image 멀티파트 이미지 파일 객체
+     * @return 웹 컨텍스트 가상 접근 URL 주소 반환
      */
     public String upload(MultipartFile image) {
         String extension = IMAGE_EXTENSIONS.get(image.getContentType());
