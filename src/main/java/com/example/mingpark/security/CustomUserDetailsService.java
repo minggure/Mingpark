@@ -25,7 +25,7 @@ public class CustomUserDetailsService implements UserDetailsService {
      * @throws UsernameNotFoundException 매칭되는 회원이 존재하지 않을 경우 발생
      */
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true) // DB 조회
     public UserDetails loadUserByUsername(String loginId) throws UsernameNotFoundException {
         Member member = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다. loginId=" + loginId));
