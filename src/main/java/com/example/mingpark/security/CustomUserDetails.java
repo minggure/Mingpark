@@ -12,13 +12,12 @@ import java.util.List;
 /**
  * 인증된 사용자 정보 관리를 위한 UserDetails 구현체.
  */
+@Getter
 public class CustomUserDetails implements UserDetails {
 
-    @Getter
+
     private final Long memberId;
-    @Getter
     private final MemberRole role;
-    @Getter
     private final String name;
     private final String loginId;
     private final String password;
