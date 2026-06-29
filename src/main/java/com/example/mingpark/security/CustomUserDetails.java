@@ -2,6 +2,7 @@ package com.example.mingpark.security;
 
 import com.example.mingpark.domain.Member;
 import com.example.mingpark.domain.MemberRole;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -11,13 +12,17 @@ import java.util.List;
 /**
  * 인증된 사용자 정보 관리를 위한 UserDetails 구현체.
  */
+@Getter
 public class CustomUserDetails implements UserDetails {
 
+
     private final Long memberId;
+    private final MemberRole role;
     private final String name;
     private final String loginId;
     private final String password;
-    private final MemberRole role;
+
+
     /**
      * Member 엔티티 데이터를 시큐리티 인증 규격으로 변환 처리.
      *
@@ -31,21 +36,10 @@ public class CustomUserDetails implements UserDetails {
         this.role = member.getRole();
     }
 
-    public Long getMemberId() {
-        return memberId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public MemberRole getRole() {
-        return role;
-    }
     /**
-     * 사용자의 보유 권한 목록 반환 및 접두사(ROLE_) 매핑 처리.
+     * 사용자의 권한을 Spring Security 권한 형식으로 반환한다.
      *
-     * @param 사용자의 권한 컬렉션
+     * @return ROLE_ 접두사가 붙은 권한 컬렉션
      */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -62,23 +56,24 @@ public class CustomUserDetails implements UserDetails {
         return loginId;
     }
 
-    @Override
+    @Override // 계정 만료 안 됨
     public boolean isAccountNonExpired() {
         return true;
     }
 
-    @Override
+    @Override // 계정 잠금 아님
     public boolean isAccountNonLocked() {
         return true;
     }
 
-    @Override
+    @Override // 비밀번호 만료 안 됨
     public boolean isCredentialsNonExpired() {
         return true;
     }
 
-    @Override
+    @Override // 계정 활성화 상태
     public boolean isEnabled() {
         return true;
     }
+
 }
