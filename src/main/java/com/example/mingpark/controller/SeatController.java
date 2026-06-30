@@ -93,40 +93,18 @@ public class SeatController {
     /**
      * DELETE /api/concerts/{concertId}/seats/{seatId}/hold
      * 임시 선점 수동 해제
-     *
-     * 유저가 선택했던 포도알 좌석을 수동으로 취소하거나 창을 닫을 때 선점 해제 처리
+     * 유저가 선택했던  좌석을 수동으로 취소하거나 창을 닫을 때 선점 해제 처리
      * Redis 장부에서 키를 강제 회수하고 DB 상태를 AVAILABLE로 롤백
      */
-//    @DeleteMapping("/{concertId}/seats/{seatId}/hold")
-//    public ResponseEntity<?> releaseHold(
-//            @PathVariable @Positive(message = "공연 ID는 양수여야 합니다.") Long concertId,
-//            @PathVariable @Positive(message = "좌석 ID는 양수여야 합니다.") Long seatId,
-//            @AuthenticationPrincipal CustomUserDetails userDetails) {
-//
-//        if (userDetails == null) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-//                    .body(Map.of("message", "로그인이 필요합니다."));
-//        }
-//
-//        Long memberId = userDetails.getMemberId();
-//        log.info("[SeatController] 좌석 수동 해제 요청 concertId={}, seatId={}, memberId={}", concertId, seatId, memberId);
-//
-//        try {
-//            // 내부 서비스나 파사드 구역에 수동 해제 로직을 호출합니다.
-//            // (seatReservationService 혹은 holdService 등 프로젝트에 구현된 수동 해제 메서드명을 매핑해 주면 됩니다.)
-//            seatReservationService.releaseHold(seatId, memberId);
-//
-//            return ResponseEntity.ok(Map.of(
-//                    "status", "success",
-//                    "message", "좌석 선택이 취소되어 예매 가능 상태로 돌아갔습니다."
-//            ));
-//        } catch (Exception e) {
-//            log.error("[SeatController] 해제 중 서버 에러 발생", e);
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-//                    "status", "error",
-//                    "message", "해제 처리 중 오류가 발생했습니다."
-//            ));
-//        }
-//    }
+    @DeleteMapping("/{concertId}/seats/{seatId}/hold")
+    public ResponseEntity<String> releaseSeatHold(
+            @PathVariable Long concertId,
+            @PathVariable Long seatId) {
+
+        // 퍼사드를 통해 Redis 락(자물쇠) 즉시 파괴
+        holdLockFacade.releaseHold(seatId);
+
+        return ResponseEntity.ok("좌석 임시 점유가 성공적으로 해제되었습니다.");
+    }
 }
 
