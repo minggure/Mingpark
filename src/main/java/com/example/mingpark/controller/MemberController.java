@@ -1,13 +1,18 @@
 package com.example.mingpark.controller;
 
 import com.example.mingpark.domain.Member;
+import com.example.mingpark.dto.KakaoTokenResponseDto;
+import com.example.mingpark.dto.KakaoUserResponseDto;
 import com.example.mingpark.dto.LoginRequestDto;
 import com.example.mingpark.dto.MemberSignupRequestDto;
+import com.example.mingpark.service.KakaoService;
 import com.example.mingpark.service.MemberService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +25,9 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 /**
@@ -30,11 +38,12 @@ import java.util.Map;
  */
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 public class MemberController {
 
     private final MemberService memberService;
     private final AuthenticationManager authenticationManager;
-
+    private final KakaoService kakaoService;
     /**
      * [POST] 입력받은 회원 정보를 검증하여 시스템에 등록 처리.
      *
@@ -128,16 +137,92 @@ public class MemberController {
             return ResponseEntity.badRequest().body(Map.of("status", "failed"));
         }
     }
-    // 로그아웃 API
-    // 브라우저 localStorage, 서버 세션 제거
-    // 시큐리티 컨피그에 이미있음
-//    @PostMapping("/members/logout")
-//    public ResponseEntity<?> logout(HttpServletRequest request) {
-//        HttpSession session = request.getSession(false);
-//        if (session != null) {
-//            session.invalidate();
-//        }
-//
-//        return ResponseEntity.ok(Map.of("status", "success"));
-//    }
+
+    @GetMapping("/members/me")
+    public ResponseEntity<?> me(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()
+                || !(authentication.getPrincipal() instanceof CustomUserDetails userDetails)) {
+            return ResponseEntity.ok(Map.of("status", "anonymous"));
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "status", "authenticated",
+                "memberName", userDetails.getName(),
+                "role", userDetails.getRole().name()
+        ));
+    }
+
+    @GetMapping("/members/kakao/login")
+    public void kakaoLogin(HttpServletResponse response) throws IOException {
+        response.sendRedirect(kakaoService.getKakaoLoginUrl());
+    }
+
+    @GetMapping("/members/kakao/callback")
+    public void kakaoCallback(
+            @RequestParam(required = false) String code,
+            @RequestParam(required = false) String error,
+            @RequestParam(required = false, name = "error_description") String errorDescription,
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws IOException {
+        if (error != null || code == null || code.isBlank()) {
+            String message = errorDescription != null && !errorDescription.isBlank()
+                    ? errorDescription
+                    : "카카오 인증 코드가 없습니다. 카카오 로그인 버튼으로 다시 시도해 주세요.";
+            redirectKakaoError(response, message);
+            return;
+        }
+        // 카카오 인증 코드로 토큰 발급
+        try {
+            KakaoTokenResponseDto token = kakaoService.getToken(code);
+            KakaoUserResponseDto kakaoUser = kakaoService.getUserInfo(token.getAccessToken());
+
+            String nickname = null;
+            String email = null;
+            // 프로필 정보가 없거나, 동의하지않았을 경우에 서버 터짐 방지
+            if (kakaoUser.getKakaoAccount() != null) {
+                email = kakaoUser.getKakaoAccount().getEmail();
+
+                if (kakaoUser.getKakaoAccount().getProfile() != null) {
+                    nickname = kakaoUser.getKakaoAccount().getProfile().getNickname();
+                }
+            }
+            // 이게 있어야 카카오 로그인시 회원가입 중복X
+            Member member = memberService.findOrCreateKakaoMember(
+                    kakaoUser.getId(), // 카카오 회원번호
+                    nickname,
+                    email
+            );
+
+            CustomUserDetails userDetails = new CustomUserDetails(member);
+
+            // 스프링 시큐리티 인증 객체 만들기
+            Authentication authentication =
+                    new UsernamePasswordAuthenticationToken( // 로그인정보를 표현하는 객체
+                            userDetails,
+                            null, // 카카오인증 끝났으므로 비번 필요X
+                            userDetails.getAuthorities() // 권한 목록
+                    );
+
+            SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+            securityContext.setAuthentication(authentication);
+            SecurityContextHolder.setContext(securityContext);
+            // 세션에 로그인 상태 저장,true는 세션없으면 새로 생성
+            HttpSession session = request.getSession(true);
+            session.setAttribute(  // 로그인 정보 세션에 저장하는 코드(세션 로그인 유지 역할)
+                    HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                    securityContext
+            );
+
+            response.sendRedirect("/index.html");
+        } catch (RuntimeException e) {
+            log.warn("Kakao login failed.", e);
+            redirectKakaoError(response, "카카오 로그인 처리 중 오류가 발생했습니다. 설정을 확인한 뒤 다시 시도해 주세요.");
+        }
+    }
+    // 카카오 로그인 실패 시 로그인 페이지로 다시 보내는 공통 메서드
+    private void redirectKakaoError(HttpServletResponse response, String message) throws IOException {
+        String encodedMessage = URLEncoder.encode(message, StandardCharsets.UTF_8);
+        response.sendRedirect("/login.html?kakaoError=" + encodedMessage);
+    }
 }

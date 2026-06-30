@@ -94,6 +94,40 @@
         .input-group input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
         .input-group input:focus { border-color: #4CAF50; outline: none; }
         .modal-submit { width: 100%; padding: 12px; background-color: #4CAF50; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .kakao-login-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin-top: 10px;
+            text-decoration: none;
+        }
+        .kakao-login-button img {
+            display: block;
+            width: 183px;
+            height: 45px;
+        }
+        .modal-divider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 16px 0 6px;
+            color: #777;
+            font-size: 13px;
+        }
+        .modal-divider::before,
+        .modal-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background-color: #e5e7eb;
+        }
+        .social-hint {
+            margin: 0 0 4px;
+            color: #555;
+            text-align: center;
+            font-size: 13px;
+        }
 
         .seat-modal-box { width: 90%; max-width: 700px; max-height: 85vh; overflow-y: auto; padding: 35px; }
 
@@ -162,6 +196,10 @@
         <div class="input-group"><input type="text" id="loginId" placeholder="아이디를 입력하세요"></div>
         <div class="input-group"><input type="password" id="password" placeholder="비밀번호를 입력하세요"></div>
         <button class="modal-submit" onclick="handleLogin()">로그인하기</button>
+        <div class="modal-divider">간편 로그인</div>
+        <a class="kakao-login-button" href="/members/kakao/login" aria-label="카카오 로그인">
+            <img src="/images/kakao_login_medium_narrow.png" alt="카카오 로그인">
+        </a>
     </div>
 </div>
 
@@ -174,6 +212,11 @@
         <div class="input-group"><input type="password" id="newPassword" placeholder="비밀번호를 입력하세요 (8자 이상)"></div>
         <div class="input-group"><input type="email" id="newEmail" placeholder="이메일을 입력하세요"></div>
         <button class="modal-submit" onclick="handleSignup()">회원가입하기</button>
+        <div class="modal-divider">간편 시작</div>
+        <p class="social-hint">카카오 계정으로 가입 없이 바로 시작할 수 있어요.</p>
+        <a class="kakao-login-button" href="/members/kakao/login" aria-label="카카오로 시작하기">
+            <img src="/images/kakao_login_medium_narrow.png" alt="카카오 로그인">
+        </a>
     </div>
 </div>
 
@@ -229,7 +272,7 @@
     let targetConcertId = null;
 
     window.onload = function() {
-        checkLoginStatus();
+        syncLoginStatus();
         loadConcerts(currentPage);
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -265,12 +308,29 @@
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
+    function syncLoginStatus() {
+        fetch('/members/me', { credentials: 'include' })
+            .then(res => res.json())
+            .then(result => {
+                if (result.status === 'authenticated') {
+                    localStorage.setItem("loginMemberName", result.memberName);
+                    localStorage.setItem("loginMemberRole", result.role);
+                } else {
+                    localStorage.removeItem("loginMemberName");
+                    localStorage.removeItem("loginMemberRole");
+                }
+                checkLoginStatus();
+            })
+            .catch(() => checkLoginStatus());
+    }
+
     function handleLogin() {
         const loginId = document.getElementById('loginId').value;
         const password = document.getElementById('password').value;
         fetch('/members/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({ loginId, password })
         })
             .then(res => res.json())

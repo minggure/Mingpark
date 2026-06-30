@@ -1,37 +1,165 @@
-<div class="login-box">
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ming Park 로그인</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f5f6f7;
+            font-family: "Malgun Gothic", Arial, sans-serif;
+            color: #222;
+        }
+
+        .login-box {
+            width: min(420px, calc(100% - 32px));
+            padding: 32px;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        h2 {
+            margin: 0 0 24px;
+            text-align: center;
+            font-size: 26px;
+        }
+
+        .input-group {
+            margin-bottom: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        input:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        .login-button {
+            width: 100%;
+            min-height: 46px;
+            border: 0;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .login-button {
+            margin-top: 4px;
+            background: #4CAF50;
+            color: #fff;
+        }
+
+        .kakao-login-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+            text-decoration: none;
+        }
+
+        .kakao-login-button img {
+            display: block;
+            width: 183px;
+            height: 45px;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 18px 0 8px;
+            color: #777;
+            font-size: 13px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: #e5e7eb;
+        }
+
+        .signup-link {
+            margin-top: 18px;
+            text-align: center;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .signup-link a {
+            color: #2f7d32;
+            font-weight: 700;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+<main class="login-box">
     <h2>Ming Park 로그인</h2>
 
     <form id="loginForm">
         <div class="input-group">
-            <input id="loginId" type="text" name="loginId" placeholder="아이디를 입력하세요" required>
+            <input id="loginId" type="text" name="loginId" placeholder="아이디를 입력하세요" autocomplete="username" required>
         </div>
 
         <div class="input-group">
-            <input id="password" type="password" name="password" placeholder="비밀번호를 입력하세요" required >
+            <input id="password" type="password" name="password" placeholder="비밀번호를 입력하세요" autocomplete="current-password" required>
         </div>
 
-        <button type="submit">로그인</button>
+        <button class="login-button" type="submit">로그인</button>
     </form>
 
+    <div class="divider">간편 로그인</div>
+
+    <a class="kakao-login-button" href="/members/kakao/login" aria-label="카카오 로그인">
+        <img src="/images/kakao_login_medium_narrow.png" alt="카카오 로그인">
+    </a>
+
     <div class="signup-link">
-        아직 회원이 아니신가요? <a href="/signup.html">회원가입 하러가기</a>
+        아직 회원이 아니신가요? <a href="/signup.html">회원가입</a>
     </div>
-</div>
+</main>
 
 <script>
+    const params = new URLSearchParams(window.location.search);
+    const kakaoError = params.get('kakaoError');
+    if (kakaoError) {
+        alert(kakaoError);
+        window.history.replaceState({}, document.title, '/login.html');
+    }
+
     document.getElementById('loginForm').addEventListener('submit', function(e) {
-        e.preventDefault(); // 페이지 전환 방지
+        e.preventDefault();
 
         const data = {
-            loginId: document.getElementById('loginId').value,
+            loginId: document.getElementById('loginId').value.trim(),
             password: document.getElementById('password').value
         };
 
         fetch('/members/login', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify(data)
         })
             .then(response => {
@@ -40,8 +168,10 @@
             })
             .then(result => {
                 if (result.status === 'success') {
+                    localStorage.setItem('loginMemberName', result.memberName);
+                    localStorage.setItem('loginMemberRole', result.role);
                     alert(result.memberName + '님, 환영합니다!');
-                    window.location.href = '/index.html'; // 메인 페이지로 부드럽게 이동
+                    window.location.href = '/index.html';
                 }
             })
             .catch(error => {
@@ -50,3 +180,5 @@
             });
     });
 </script>
+</body>
+</html>
