@@ -41,7 +41,9 @@ public class SecurityConfig {
                                 "/register.html",
                                 "/images/**",
                                 "/uploads/**",
-                                "/error"
+                                "/error",
+                                "/members/kakao/login",
+                                "/members/kakao/callback"
                         ).permitAll()
 
                         // 회원가입, 로그인 API

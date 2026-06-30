@@ -2,14 +2,13 @@ package com.example.mingpark.service;
 
 import com.example.mingpark.domain.Member;
 import com.example.mingpark.domain.MemberRole;
-import com.example.mingpark.dto.LoginRequestDto;
 import com.example.mingpark.dto.MemberSignupRequestDto;
 import com.example.mingpark.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.Optional;
+import java.util.UUID;
 /**
  * 회원 가입 및 계정 정보 처리 비즈니스 로직 서비스.
  */
@@ -47,5 +46,29 @@ public class MemberService {
                 .build();
 
         memberRepository.save(member);
+    }
+
+    @Transactional
+    public Member findOrCreateKakaoMember(Long kakaoId, String nickname, String email) {
+        String loginId = "kakao_" + kakaoId;
+
+        return memberRepository.findByLoginId(loginId)
+                .orElseGet(() -> {
+                    String safeEmail = email != null ? email : loginId + "@kakao.local";
+                    String safeName = nickname != null && !nickname.isBlank() ? nickname : "카카오사용자";
+                    if (safeName.length() > 20) {
+                        safeName = safeName.substring(0, 20);
+                    }
+
+                    Member member = Member.builder()
+                            .name(safeName)
+                            .loginId(loginId)
+                            .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                            .email(safeEmail)
+                            .role(MemberRole.USER)
+                            .build();
+
+                    return memberRepository.save(member);
+                });
     }
 }
