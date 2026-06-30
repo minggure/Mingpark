@@ -25,20 +25,7 @@
         <div class="detail-layout" id="detail-content"></div>
     </section>
 
-    <section id="mypage-section" class="page-section">
-        <h2>👤 마이페이지 대시보드</h2>
-        <div class="mypage-card">
-            <div class="mypage-profile">
-                <div class="mypage-card-row"><span class="mypage-label">이름</span><span id="my-name" class="mypage-value">-</span></div>
-                <div class="mypage-card-row"><span class="mypage-label">이메일</span><span id="my-email" class="mypage-value">-</span></div>
-                <div class="mypage-card-row"><span class="mypage-label">보유 포인트</span><span id="my-point" class="mypage-value point">0P</span></div>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 12px;">
-                <button class="btn btn-primary" style="width: 100%;" onclick="alert('예약 내역 기능 이동 준비 중')">📋 전체 예약 내역 조회</button>
-                <button class="btn btn-secondary" style="width: 100%;" onclick="showListPage()">메인 목록으로</button>
-            </div>
-        </div>
-    </section>
+    <section id="mypage-section" class="page-section"></section>
 </div>
 
 <div class="modal-overlay" id="login-modal">
@@ -83,7 +70,7 @@
 <script>
     let currentPage = 0;
     let targetConcertId = null;
-    let myCurrentPoints = 1000000;
+    let myCurrentPoints = 1234567;
 
     window.onload = function() {
         checkLoginStatus();
@@ -97,7 +84,6 @@
         }
     };
 
-    // 사용자 로그인 상태 및 ADMIN 권한별 상단 네비게이션 동적 제어 함수
     function checkLoginStatus() {
         const authArea = document.getElementById('auth-area');
         const loginUser = localStorage.getItem("loginMemberName");
@@ -107,8 +93,6 @@
             const registerButton = loginRole === 'ADMIN'
                 ? `<button class="nav-btn btn-primary" onclick="location.href='/register.html'">공연 등록</button>`
                 : '';
-
-            // 유저 환영 안내 영역 클릭 시 마이페이지 이동 바인딩 구성
             authArea.innerHTML = `
                 <span class="user-welcome" style="cursor:pointer;" onclick="showMyPage()">👋 ${loginUser}님 환영합니다!</span>
                 ${registerButton}
@@ -163,7 +147,6 @@
             });
     }
 
-    // 서버 로그아웃 처리 및 인풋 상자 텍스트 완전 초기화 함수
     function handleLogout() {
         fetch('/members/logout', { method: 'POST' }).finally(() => {
             localStorage.removeItem("loginMemberName");
@@ -189,36 +172,50 @@
         loadConcerts(currentPage);
     }
 
-    // 마이페이지 탭 전환 및 백엔드 DTO 원장 데이터 정밀 매핑 함수
+    // mypage.html로 비동기 수신하여 주입하는 SPA 제어 함수
     function showMyPage() {
-        document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
-        document.getElementById('list-section').classList.remove('active');
-        document.getElementById('detail-section').classList.remove('active');
-        document.getElementById('mypage-section').classList.add('active');
+        const myPageSection = document.getElementById('mypage-section');
 
-        fetch('/api/users/me/points', { credentials: 'include' })
+        fetch('/mypage.html')
             .then(res => {
-                if (res.status === 401) { handle401Error(); return null; }
-                return res.json();
+                if (!res.ok) throw new Error("mypage.html 파일을 찾을 수 없습니다.");
+                return res.text();
+            })
+            .then(htmlTemplate => {
+                myPageSection.innerHTML = htmlTemplate;
+
+                document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+                myPageSection.classList.add('active');
+
+                return fetch('/api/users/me/points', { credentials: 'include' });
+            })
+            .then(res => {
+                if (res && (res.status === 401 || res.status === 403)) {
+                    handle401Error();
+                    return null;
+                }
+                return res ? res.json() : null;
             })
             .then(data => {
                 if (!data) return;
 
                 const name = data.name || localStorage.getItem("loginMemberName") || "-";
                 const email = data.email || "-";
-                myCurrentPoints = data.point !== undefined ? data.point : 1000000;
+                myCurrentPoints = data.point !== undefined ? data.point : myCurrentPoints;
 
                 document.getElementById('my-name').innerText = name;
                 document.getElementById('my-email').innerText = email;
                 document.getElementById('my-point').innerText = Number(myCurrentPoints).toLocaleString() + "P";
             })
-            .catch(() => {
-                document.getElementById('my-name').innerText = localStorage.getItem("loginMemberName") || "테스트유저";
-                document.getElementById('my-email').innerText = "test-user@mingpark.com";
-                document.getElementById('my-point').innerText = Number(myCurrentPoints).toLocaleString() + "P";
+            .catch((err) => {
+                console.warn("백엔드 API 미완성 또는 유휴 상태로 가상 마이페이지 데이터 출력: ", err.message);
+                if (document.getElementById('my-name')) {
+                    document.getElementById('my-name').innerText = localStorage.getItem("loginMemberName") || "테스트유저";
+                    document.getElementById('my-email').innerText = "test-user@mingpark.com";
+                    document.getElementById('my-point').innerText = Number(myCurrentPoints).toLocaleString() + "P";
+                }
             });
     }
-
     function loadConcerts(page) {
         currentPage = page;
         fetch(`/api/concerts?page=${page}&size=6`)
@@ -246,7 +243,6 @@
 
     function loadConcertDetail(concertId) {
         targetConcertId = concertId;
-
         fetch(`/api/concerts/${concertId}`)
             .then(res => res.json())
             .then(concert => {
@@ -271,7 +267,6 @@
                         </div>
                     </section>
                 `;
-
                 document.getElementById('list-section').classList.remove('active');
                 document.getElementById('detail-section').classList.add('active');
             })
@@ -306,7 +301,6 @@
                 return res.json();
             })
             .then(data => {
-                console.log("서버에서 받은 최신 좌석 데이터:", data);
                 zoneA.innerHTML = "";
                 zoneB.innerHTML = "";
 
@@ -328,9 +322,7 @@
                     else zoneB.appendChild(seatDiv);
                 });
             })
-            .catch(err => {
-                console.error("좌석 로딩 실패:", err);
-                // 백엔드 API 유휴 상황 시 테스트용 가상 구동 목 보장
+            .catch(() => {
                 zoneA.innerHTML = ""; zoneB.innerHTML = "";
                 for (let i = 1; i <= 50; i++) {
                     const seatDiv = document.createElement("div");
@@ -347,7 +339,6 @@
             });
     }
 
-    // 결제 팝업 이행 처리 루틴 제거 및 선점 알림창 작동 후 닫히는 비즈니스 플로우 롤백 유지
     function startReservationFlow(concertId, seatId, seatNumber) {
         fetch(`/api/concerts/${concertId}/seats/${seatId}/hold`, {
             method: 'POST',
@@ -371,13 +362,13 @@
                     loadSeats();
                 }
             })
-            .catch(err => {
-                console.error("통신 에러:", err);
+            .catch(() => {
                 alert(seatNumber + "번 좌석 선점이 완료되었습니다! (모의 테스트 상태)");
                 closeModal('seat-modal');
             });
     }
 
+    // 시큐리티 차단 및 세션 만료 예외 대응 제어 함수
     function handle401Error() {
         alert("🔒 세션이 만료되어 로그인이 해제되었습니다. 다시 로그인해 주세요!");
         closeModal('seat-modal');
