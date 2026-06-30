@@ -304,6 +304,45 @@ h2 {
     cursor: pointer;
 }
 
+.kakao-login-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-top: 10px;
+    text-decoration: none;
+}
+
+.kakao-login-button img {
+    display: block;
+    width: 183px;
+    height: 45px;
+}
+
+.modal-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 16px 0 6px;
+    color: #777;
+    font-size: 13px;
+}
+
+.modal-divider::before,
+.modal-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background-color: #e5e7eb;
+}
+
+.social-hint {
+    margin: 0 0 4px;
+    color: #555;
+    text-align: center;
+    font-size: 13px;
+}
+
 .seat-modal-box {
     width: 90%;
     max-width: 700px;
