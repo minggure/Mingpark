@@ -21,7 +21,7 @@ public class HoldLockFacade {
         String lockKey = "lock:seat:" + seatId;
 
         Boolean acquired = redisTemplate.opsForValue()
-                .setIfAbsent(lockKey, String.valueOf(memberId), 20, TimeUnit.SECONDS);
+                .setIfAbsent(lockKey, String.valueOf(memberId), 5, TimeUnit.MINUTES);
 
         if(Boolean.FALSE.equals(acquired)){
             log.warn("좌석 선점 실패 (이미 점유됨) -  seatId={}, requestUser={}", seatId, memberId);
@@ -31,5 +31,14 @@ public class HoldLockFacade {
         log.info("좌석 임시 점유 성공 - seatId={} , requestUser={}", seatId, memberId);
         }
 
+    /**
+     * 결제 실패 or 결제 취소시 임시점유가 바로 해제되는 로직
+     * @param seatId
+     */
+    public  void releaseHold(Long seatId){
+        String lockKey = "lock:seat:" + seatId;
+
+        redisTemplate.delete(lockKey);
+    }
     }
 
