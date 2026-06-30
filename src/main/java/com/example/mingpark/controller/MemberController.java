@@ -220,7 +220,7 @@ public class MemberController {
             redirectKakaoError(response, "카카오 로그인 처리 중 오류가 발생했습니다. 설정을 확인한 뒤 다시 시도해 주세요.");
         }
     }
-    // 카카오 로그인 실패 시 로그인 페이지로 다시 보내는 공통 메서드
+    // 카카오 로그인 실패 시 로그인 페이지로 다시 보내는 공통 메서드입
     private void redirectKakaoError(HttpServletResponse response, String message) throws IOException {
         String encodedMessage = URLEncoder.encode(message, StandardCharsets.UTF_8);
         response.sendRedirect("/login.html?kakaoError=" + encodedMessage);

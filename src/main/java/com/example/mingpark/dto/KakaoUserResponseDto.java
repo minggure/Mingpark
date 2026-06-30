@@ -1,27 +1,26 @@
 package com.example.mingpark.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-@Setter
+@AllArgsConstructor
 public class KakaoUserResponseDto {
-    private Long id;
+    private final Long id;
+    private final KakaoAccount kakaoAccount;
 
-    @JsonProperty("kakao_account")
-    private KakaoAccount kakaoAccount;
 
     @Getter
-    @Setter
+    @AllArgsConstructor
     public static class KakaoAccount {
-        private String email;
-        private Profile profile;
+        private final String email;
+        private final Profile profile;
     }
 
+
     @Getter
-    @Setter
+    @AllArgsConstructor
     public static class Profile {
-        private String nickname;
+        private final String nickname;
     }
 }

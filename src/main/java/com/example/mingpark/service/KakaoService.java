@@ -64,22 +64,21 @@ public class KakaoService {
                     .body(formData)
                     .retrieve()
                     .body(Map.class);
-            // 카카오 응답 Map에서 값을 하나씩 꺼내서 KakaoTokenResponseDto 에 넣는 부분
-            KakaoTokenResponseDto token = new KakaoTokenResponseDto();
-            token.setAccessToken((String) response.get("access_token"));
-            token.setTokenType((String) response.get("token_type"));
-            token.setRefreshToken((String) response.get("refresh_token"));
+            String accessToken = (String) response.get("access_token");
+            String tokenType = (String) response.get("token_type");
+            String refreshToken = (String) response.get("refresh_token");
+            Integer expiresInValue = null;
             Object expiresIn = response.get("expires_in");
 
             if (expiresIn instanceof Number number) {
-                token.setExpiresIn(number.intValue());
+                expiresInValue = number.intValue();
             }
             // access token이 없는지 확인
-            if (token.getAccessToken() == null || token.getAccessToken().isBlank()) {
+            if (accessToken == null || accessToken.isBlank()) {
                 throw new IllegalStateException("카카오 access_token 응답이 비어 있습니다.");
             }
 
-            return token;
+            return new KakaoTokenResponseDto(accessToken, tokenType, refreshToken, expiresInValue);
         } catch (RestClientResponseException e) {
             log.warn("Kakao token request failed. status={}, body={}", e.getStatusCode(), e.getResponseBodyAsString());
             throw e;
@@ -94,32 +93,31 @@ public class KakaoService {
                     .retrieve()
                     .body(Map.class);
 
-            KakaoUserResponseDto user = new KakaoUserResponseDto();
+            Long kakaoId = null;
             Object id = response.get("id");
             if (id instanceof Number number) {
-                user.setId(number.longValue());
+                kakaoId = number.longValue();
             }
 
+            KakaoUserResponseDto.KakaoAccount kakaoAccount = null;
             Object kakaoAccountValue = response.get("kakao_account");
             if (kakaoAccountValue instanceof Map<?, ?> kakaoAccountMap) {
-                KakaoUserResponseDto.KakaoAccount kakaoAccount = new KakaoUserResponseDto.KakaoAccount();
-                kakaoAccount.setEmail((String) kakaoAccountMap.get("email"));
+                String email = (String) kakaoAccountMap.get("email");
 
+                KakaoUserResponseDto.Profile profile = null;
                 Object profileValue = kakaoAccountMap.get("profile");
                 if (profileValue instanceof Map<?, ?> profileMap) {
-                    KakaoUserResponseDto.Profile profile = new KakaoUserResponseDto.Profile();
-                    profile.setNickname((String) profileMap.get("nickname"));
-                    kakaoAccount.setProfile(profile);
+                    profile = new KakaoUserResponseDto.Profile((String) profileMap.get("nickname"));
                 }
 
-                user.setKakaoAccount(kakaoAccount);
+                kakaoAccount = new KakaoUserResponseDto.KakaoAccount(email, profile);
             }
 
-            if (user.getId() == null) {
+            if (kakaoId == null) {
                 throw new IllegalStateException("카카오 사용자 id 응답이 비어 있습니다.");
             }
 
-            return user;
+            return new KakaoUserResponseDto(kakaoId, kakaoAccount);
         } catch (RestClientResponseException e) {
             log.warn("Kakao user info request failed. status={}, body={}", e.getStatusCode(), e.getResponseBodyAsString());
             throw e;
