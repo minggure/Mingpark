@@ -61,6 +61,7 @@ public class SecurityConfig {
                         // 로그인한 사용자만 가능
                         .requestMatchers("/api/reservations/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/concerts/*/seats").authenticated()
+                        .requestMatchers("/api/users/me/**").authenticated()
 
                         // 나머지는 일단 허용 또는 인증 필요 중 선택
                         // 안전하게 가려면 authenticated() 추천
