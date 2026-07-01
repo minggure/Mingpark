@@ -67,4 +67,13 @@ public class Member {
     public void changePassword(String password) {
         this.password = password;
     }
+
+    public void decreasePoint(int amount) {
+        if (this.point < amount) {
+            throw new IllegalStateException("포인트가 부족합니다.");
+        }
+
+        this.point -= amount;
+    }
+
 }

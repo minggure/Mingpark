@@ -1,2 +1,2 @@
 ### 좌석 찜하기 테스트
-DELETE http://localhost:8080/api/concerts/38/seats/1631/hold
+GET http://localhost:8080/api/concerts/22/seats
