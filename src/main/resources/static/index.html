@@ -380,7 +380,23 @@
                 const result = await res.json();
 
                 if (res.ok) {
-                    alert(seatNumber + "번 좌석 선점이 완료되었습니다! (5분간 유지)");
+                    const reservationResult = await createReservation(concertId, seatId);
+
+                    if (!reservationResult || reservationResult.status !== "success") {
+                        alert(reservationResult?.message || "예매 생성에 실패했습니다.");
+                        loadSeats();
+                        return;
+                    }
+
+                    const reservationId = reservationResult.reservationId;
+
+                    if (confirm(`${seatNumber}번 좌석 예매가 생성되었습니다. 결제하시겠습니까?`)) {
+                        await payReservation(reservationId);
+                    } else {
+                        await failReservation(reservationId);
+                        alert("결제가 취소되었습니다.");
+                    }
+
                     closeModal('seat-modal');
                     loadSeats();
                 } else {
@@ -389,9 +405,55 @@
                 }
             })
             .catch(() => {
-                alert(seatNumber + "번 좌석 선점이 완료되었습니다! (모의 테스트 상태)");
-                closeModal('seat-modal');
+                alert("좌석 선점 중 오류가 발생했습니다.");
+                loadSeats();
             });
+    }
+
+    async function createReservation(concertId, seatId) {
+        const res = await fetch(`/api/concerts/${concertId}/seats/${seatId}/reservations`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+
+        if (res.status === 401) {
+            handle401Error();
+            return null;
+        }
+
+        return await res.json();
+    }
+
+    async function payReservation(reservationId) {
+        const res = await fetch(`/api/reservations/${reservationId}/payment`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+
+        const result = await res.json();
+
+        if (res.ok && result.status === "success") {
+            alert(result.message || "결제가 완료되었습니다.");
+        } else {
+            alert(result.message || "결제에 실패했습니다.");
+        }
+    }
+
+    async function failReservation(reservationId) {
+        const res = await fetch(`/api/reservations/${reservationId}/fail`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+
+        if (res.status === 401) {
+            handle401Error();
+            return null;
+        }
+
+        return await res.json();
     }
 
     // 시큐리티 차단 및 세션 만료 예외 대응 제어 함수

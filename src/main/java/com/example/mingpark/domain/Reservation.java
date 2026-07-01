@@ -69,6 +69,18 @@ public class Reservation {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
+    // 결제가 끝난 예약이므로 예약 완료 상태로 바꿈
+    public void completePayment() {
+        this.status = ReservationStatus.RESERVED;
+        this.confirmedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+    // 결제 실패 -> 취소 상태로 바꿈
+    public void failPayment() {
+        this.status = ReservationStatus.CANCELLED;
+        this.cancelledAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
 }
 
 
