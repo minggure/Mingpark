@@ -73,4 +73,35 @@ public class ConcertController {
         return concertService.getConcertDetail(concertId);
     }
 
+    /**
+     * [DELETE] 특정 공연 삭제 (관리자 전용)
+     */
+    @DeleteMapping("/api/concerts/{concertId}")
+    public ResponseEntity<String> deleteConcert(
+            @PathVariable Long concertId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        // 1. 관리자 권한 확인
+        if (userDetails == null || userDetails.getRole() != MemberRole.ADMIN) {
+            return ResponseEntity.status(403).body("관리자만 공연을 삭제할 수 있습니다.");
+        }
+        // 2. 서비스로 삭제 요청
+        concertService.deleteConcert(concertId);
+
+        return ResponseEntity.ok("공연이 성공적으로 삭제되었습니다.");
+    }
+
+    @PutMapping("/api/concerts/{concertId}")
+    public ResponseEntity<String> updateConcert(
+            @PathVariable Long concertId,
+            @RequestBody ConcertCreatRequestDto request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        if (userDetails == null || userDetails.getRole() != MemberRole.ADMIN) {
+            return ResponseEntity.status(403).body("관리자만 수정 가능합니다.");
+        }
+        concertService.updateConcert(concertId, request);
+        return ResponseEntity.ok("공연 정보가 수정되었습니다.");
+    }
+
 }

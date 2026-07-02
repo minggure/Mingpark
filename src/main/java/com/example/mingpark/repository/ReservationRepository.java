@@ -3,6 +3,7 @@ package com.example.mingpark.repository;
 import com.example.mingpark.domain.Reservation;
 import com.example.mingpark.domain.ReservationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -16,6 +17,10 @@ import java.util.Optional;
  * fetch join으로 연관 엔티티를 한 번에 조회한다.</p>
  */
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
+    @Modifying
+    @Query("DELETE FROM Reservation r WHERE r.concert.concertId = :concertId")
+    void deleteAllByConcertId(@Param("concertId") Long concertId);
+
 
     /**
      * 특정 회원의 특정 상태 예매 목록을 공연 및 좌석 정보와 함께 조회한다.
@@ -61,4 +66,5 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             @Param("memberId") Long memberId,
             @Param("status") ReservationStatus status
     );
+
 }

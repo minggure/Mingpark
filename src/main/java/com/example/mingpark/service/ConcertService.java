@@ -10,7 +10,10 @@ import com.example.mingpark.dto.ConcertDetailResponseDto;
 import com.example.mingpark.dto.ConcertResponseDto;
 import com.example.mingpark.exception.ConcertNotFoundException;
 import com.example.mingpark.repository.ConcertRepository;
+import com.example.mingpark.repository.PaymentHistoryRepository;
+import com.example.mingpark.repository.ReservationRepository;
 import com.example.mingpark.repository.SeatRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -29,6 +32,8 @@ import java.util.List;
 public class ConcertService {
     private final ConcertRepository concertRepository;
     private final SeatRepository seatRepository;
+    private final ReservationRepository reservationRepository;
+    private final PaymentHistoryRepository paymentHistoryRepository;
 
     /**
      * 페이지로부터 전달 받은 공연 등록 정보(DTO)를 받아 공연 엔티티를 생성하여 DB에 저장합니다
@@ -91,4 +96,35 @@ public class ConcertService {
         return new ConcertDetailResponseDto(concert);
     }
 
+    /**
+     * 공연 삭제 API Service 구현 Transactional 을 사용해야 삭제 쿼리가 한번에 실행됨
+     * 삭제 순서 중요 자식부터 삭제해서 차근히 하나씩 삭제해야함
+     * 결제 내역 -> 예매 내역 -> 좌석 -> 공연 순서로 삭제
+     * @param concertId
+     */
+    @Transactional
+    public void deleteConcert(Long concertId) {
+        Concert concert = concertRepository.findById(concertId)
+                .orElseThrow(() -> new ConcertNotFoundException(concertId));
+
+
+        paymentHistoryRepository.deleteAllByConcertId(concertId); // 1등: 결제 내역 삭제
+        reservationRepository.deleteAllByConcertId(concertId);    // 2등: 예매 내역 삭제
+        seatRepository.deleteAllByConcertId(concertId);           // 3등: 좌석 삭제
+        concertRepository.delete(concert);                          // 마지막에 한번에 부모(공연) 삭제
+    }
+
+    /**
+     * 공연 등록후 수정하는 API
+     * @param concertId
+     * @param request
+     */
+    @Transactional
+    public void updateConcert(Long concertId, ConcertCreatRequestDto request) {
+        Concert concert = concertRepository.findById(concertId)
+                .orElseThrow(() -> new ConcertNotFoundException(concertId));
+
+        concert.update(request);
+
+    }
 }
