@@ -76,10 +76,63 @@
     </div>
 </div>
 
+<div class="modal-overlay" id="payment-modal">
+    <div class="modal-box payment-modal-box">
+        <span class="modal-close" onclick="cancelPayment()">&times;</span>
+        <h3 class="payment-header">💳 결제 정보 확인</h3>
+
+        <div class="receipt-box">
+            <p><strong>🎵 공연 정보:</strong> <span id="pay-concert-title"></span></p>
+            <p><strong>🪑 선택 좌석:</strong> <span id="pay-seat-number"></span>번 좌석</p>
+
+            <hr class="divider-dashed">
+
+            <div class="receipt-row">
+                <span><strong>💰 현재 잔액</strong></span>
+                <span><span id="my-point" class="receipt-value"></span> 원</span>
+            </div>
+
+            <div class="receipt-row">
+                <span><strong>💸 결제 금액</strong></span>
+                <span><span id="pay-price" class="receipt-value text-red"></span> 원</span>
+            </div>
+
+            <hr class="divider-solid">
+
+            <div class="receipt-row">
+                <span><strong>📉 결제 후 잔액</strong></span>
+                <span><span id="pay-remain-point" class="receipt-value text-bold"></span> 원</span>
+            </div>
+        </div>
+
+        <div class="terms-box">
+            <strong>[결제 및 환불 규정]</strong><br>
+            1. 본 결제는 즉시 처리되며, 회원님의 포인트에서 차감됩니다.<br>
+            2. 공연 시작 24시간 전까지는 100% 환불이 가능합니다.<br>
+            3. 공연 당일 취소 및 환불은 절대 불가합니다.<br>
+            4. 불법 매크로 이용 적발 시 예매가 강제 취소되며 수수료가 부과될 수 있습니다.<br>
+            5. 기타 상세 규정은 Ming Park 이용약관에 따릅니다.
+        </div>
+
+        <label class="agree-label">
+            <input type="checkbox" id="agree-checkbox" class="agree-checkbox" onchange="togglePayButton()">
+            <span>위 결제 및 환불 규정을 확인하였으며, 이에 동의합니다.</span>
+        </label>
+
+        <div class="btn-group">
+            <button class="btn btn-primary" id="btn-pay-submit" onclick="proceedPayment()" disabled>결제하기</button>
+            <button class="btn btn-danger" onclick="cancelPayment()">취소</button>
+        </div>
+    </div>
+</div>
+
 <script>
     let currentPage = 0;
     let targetConcertId = null;
-    let myCurrentPoints = 1234567;
+    let myCurrentPoints = 0;
+    let currentReservationId = null;
+    let currentConcertTitle = "";
+    let currentConcertPrice = 0;
 
     window.onload = function() {
         syncLoginStatus();
@@ -272,6 +325,8 @@
         fetch(`/api/concerts/${concertId}`)
             .then(res => res.json())
             .then(concert => {
+                currentConcertTitle = concert.concertTitle;
+                currentConcertPrice = concert.concertPrice;
                 const detailContent = document.getElementById('detail-content');
                 const priceFormatted = Number(concert.concertPrice).toLocaleString();
 
@@ -387,18 +442,52 @@
                         loadSeats();
                         return;
                     }
-
                     const reservationId = reservationResult.reservationId;
 
-                    if (confirm(`${seatNumber}번 좌석 예매가 생성되었습니다. 결제하시겠습니까?`)) {
-                        await payReservation(reservationId);
-                    } else {
-                        await failReservation(reservationId);
-                        alert("결제가 취소되었습니다.");
+                    currentReservationId = reservationId;
+
+
+                    try {
+                        const pointRes = await fetch('/api/users/me/points', { credentials: 'include' });
+                        if (pointRes.ok) {
+                            const pointData = await pointRes.json();
+                            myCurrentPoints = pointData.point !== undefined ? pointData.point : 0;
+                        }
+                    } catch (e) {
+                        console.error("잔액 조회 중 에러 발생:", e);
                     }
 
-                    closeModal('seat-modal');
-                    loadSeats();
+                    // 영수증에 글자 채워넣기
+                    document.getElementById("pay-concert-title").innerText = currentConcertTitle;
+                    document.getElementById("pay-seat-number").innerText = seatNumber;
+                    document.getElementById("pay-price").innerText = Number(currentConcertPrice).toLocaleString();
+                    document.getElementById("my-point").innerText = Number(myCurrentPoints).toLocaleString();
+
+                    // 잔액 계산하기 (내 포인트 - 공연 가격)
+                    const remainPoint = myCurrentPoints - currentConcertPrice;
+                    const remainEl = document.getElementById("pay-remain-point");
+
+                    // 잔액이 마이너스면 빨간색으로 경고, 아니면 초록색으로 표시
+                    if (remainPoint < 0) {
+                        remainEl.innerText = "잔액 부족 (" + Number(remainPoint).toLocaleString() + ")";
+                        remainEl.style.color = "#e53935";
+                    } else {
+                        remainEl.innerText = Number(remainPoint).toLocaleString();
+                        remainEl.style.color = "#4CAF50";
+                    }
+
+                    // 창 열 때마다 체크박스 끄고, 결제 버튼 회색으로 잠가두기 (초기화)
+                    document.getElementById("agree-checkbox").checked = false;
+                    const payBtn = document.getElementById("btn-pay-submit");
+                    payBtn.disabled = true;
+                    payBtn.style.backgroundColor = "#ccc";
+                    payBtn.style.cursor = "not-allowed";
+
+                    // 세팅 다 끝났으니 진짜로 모달창 띄우기!
+                    openModal('payment-modal');
+
+
+
                 } else {
                     alert(result.message || "아쉽습니다! 이미 다른 분이 선택한 좌석입니다.");
                     loadSeats();
@@ -488,8 +577,33 @@
         nextBtn.disabled = currentPage === totalPages - 1; nextBtn.onclick = () => loadConcerts(currentPage + 1);
         pageContainer.appendChild(nextBtn);
     }
+    // 💡 팝업창에서 [결제하기] 버튼을 클릭했을 때 실행되는 함수
+    async function proceedPayment() {
+        closeModal('payment-modal'); // 일단 결제창을 닫습니다.
 
+        // 아까 2단계에서 몰래 저장해뒀던 currentReservationId를 꺼내서 결제 API로 보냅니다!
+        await payReservation(currentReservationId);
+
+        closeModal('seat-modal'); // 뒤에 깔려있던 좌석표 창도 닫아줍니다.
+        loadSeats(); // 최신 좌석 상태로 새로고침
+    }
+
+    // 💡 팝업창에서 [취소] 버튼을 클릭했을 때 실행되는 함수
+    async function cancelPayment() {
+        closeModal('payment-modal'); // 일단 결제창을 닫습니다.
+
+        // 취소 API로 예약 번호를 보냅니다.
+        await failReservation(currentReservationId);
+        alert("결제가 취소되었습니다.");
+
+        closeModal('seat-modal');
+        loadSeats(); // 좌석을 다시 새로고침해서 파란색(AVAILABLE)으로 돌아온 걸 보여줍니다.
+    }
     document.getElementById("refresh-seats-btn").onclick = loadSeats;
+    function togglePayButton() {
+        const isChecked = document.getElementById("agree-checkbox").checked;
+        document.getElementById("btn-pay-submit").disabled = !isChecked;
+    }
 </script>
 </body>
 </html>
