@@ -9,9 +9,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.Map;
 
+/**
+ * 공연 예매 대기열 진입, 상태 조회 및 이탈 처리를 담당하는 REST 컨트롤러.
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/concerts/{concertId}/waiting")
@@ -20,20 +22,24 @@ public class WaitingController {
     private final WaitingService waitingService;
 
     /**
-     * 1. [POST] 대기열 진입 (k6 부하 테스트 호환 모드)
+     * 특정 공연의 대기열 진입 요청 처리.
+     *
+     * @param concertId 공연 고유 식별 ID
+     * @param userDetails 인증된 회원의 세션 정보
+     * @param request 서블릿 리퀘스트 객체
+     * @return 대기 상태 및 순위 응답 객체
      */
     @PostMapping("/join")
     public ResponseEntity<?> joinQueue(
             @PathVariable Long concertId,
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            HttpServletRequest request // 🌟 가상 부하테스트 쿠키 파싱용 추가
+            HttpServletRequest request
     ) {
         Long memberId;
 
         if (userDetails != null) {
             memberId = userDetails.getMemberId();
         } else {
-            // 🌟 만약 k6 가상 유저라면? 헤더에서 Cookie 값을 읽어 가상 memberId를 추출합니다.
             String cookieHeader = request.getHeader("Cookie");
             if (cookieHeader != null && cookieHeader.contains("VIRTUAL_SESSION_MEMBER_")) {
                 String idStr = cookieHeader.split("VIRTUAL_SESSION_MEMBER_")[1];
@@ -49,7 +55,12 @@ public class WaitingController {
     }
 
     /**
-     * 2. [GET] 대기 상태 조회 (k6 부하 테스트 호환 모드)
+     * 특정 공연 대기열 내 회원의 현재 대기 상태 및 순위 조회 처리.
+     *
+     * @param concertId 공연 고유 식별 ID
+     * @param userDetails 인증된 회원의 세션 정보
+     * @param request 서블릿 리퀘스트 객체
+     * @return 실시간 대기 순위 및 상태 응답 객체
      */
     @GetMapping("/status")
     public ResponseEntity<?> getStatus(
@@ -75,8 +86,13 @@ public class WaitingController {
         WaitingStatusResponseDto response = waitingService.getStatus(concertId, memberId);
         return ResponseEntity.ok(response);
     }
+
     /**
-     * 3. [POST] 대기열 강제 퇴장 (k6 부하 테스트 전용 비동기 이탈 API)
+     * 부하 테스트 세션의 대기열 데이터 강제 해제 및 조기 이탈 처리.
+     *
+     * @param concertId 공연 고유 식별 ID
+     * @param request 서블릿 리퀘스트 객체
+     * @return 대기열 삭제 성공 또는 실패 응답 맵
      */
     @PostMapping("/leave")
     public ResponseEntity<?> leaveQueue(
@@ -88,7 +104,6 @@ public class WaitingController {
             String idStr = cookieHeader.split("VIRTUAL_SESSION_MEMBER_")[1];
             Long memberId = Long.parseLong(idStr);
 
-            // DB 조회 없이 Redis 장부만 즉시 삭제!
             waitingService.clearUser(concertId, memberId);
             return ResponseEntity.ok(Map.of("status", "success", "message", "대기열 반납 완료"));
         }

@@ -17,9 +17,12 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * 포인트 기반 결제 승인, 실패 처리 및 결제 이력 관리를 담당하는 서비스.
+ */
 @Service
 @RequiredArgsConstructor
-@Transactional(noRollbackFor = IllegalStateException.class) // 예외가 발생해도 DB저장을 롤백하지않는다.
+@Transactional(noRollbackFor = IllegalStateException.class)
 public class PaymentService {
 
     private final ReservationRepository reservationRepository;
@@ -27,6 +30,15 @@ public class PaymentService {
     private final ApplicationEventPublisher eventPublisher;
     private final HoldLockFacade holdLockFacade;
     private final WaitingService waitingService;
+
+    /**
+     * 특정 예매 건에 대한 포인트 차감 결제 승인 및 영속화 처리.
+     *
+     * @param reservationId 예매 고유 식별 ID
+     * @param memberId 회원의 고유 ID
+     * @throws IllegalArgumentException 예매 내역이 없거나 본인의 예약이 아닐 경우 발생함
+     * @throws IllegalStateException 결제 대기 상태가 아니거나 보유 포인트가 부족할 경우 발생함
+     */
     public void payment(Long reservationId, Long memberId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("예매내역이 없습니다."));
@@ -38,7 +50,7 @@ public class PaymentService {
         }
         if (reservation.getStatus() != ReservationStatus.PENDING) {
             throw new IllegalStateException("결제 대기 상태인 예매만 결제할 수 있습니다.");
-        } // 예매 상태가 PENDING이지않으면 결제 못 함
+        }
         int price = reservation.getTotalPrice();
 
         if (member.getPoint() < price) {
@@ -84,6 +96,14 @@ public class PaymentService {
         );
     }
 
+    /**
+     * 결제 실패 및 사용자 이탈에 따른 가예약 취소 및 롤백 가드 처리.
+     *
+     * @param reservationId 예매 고유 식별 ID
+     * @param memberId 회원의 고유 ID
+     * @throws IllegalArgumentException 예매 내역이 없거나 본인의 예약이 아닐 경우 발생함
+     * @throws IllegalStateException 결제 대기 상태가 아닐 경우 발생함
+     */
     public void fail(Long reservationId, Long memberId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("예매 내역이 없습니다."));

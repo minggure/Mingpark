@@ -43,13 +43,17 @@ public class SecurityConfig {
                                 "/uploads/**",
                                 "/error",
                                 "/members/kakao/login",
-                                "/members/kakao/callback",
-                                "/api/concerts/*/waiting/**"
+                                "/members/kakao/callback"
                         ).permitAll()
 
                         // 회원가입, 로그인 API
                         .requestMatchers(HttpMethod.POST, "/members/signup").permitAll()
                         .requestMatchers(HttpMethod.POST, "/members/login").permitAll()
+
+                        // 대기열 관련 API 접근 인가 세분화 처리
+                        .requestMatchers(HttpMethod.POST, "/api/concerts/*/waiting/join").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/concerts/*/waiting/status").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/concerts/*/waiting/leave").permitAll()
 
                         // 공연 조회 API는 누구나 가능
                         .requestMatchers(HttpMethod.GET, "/api/concerts").permitAll()

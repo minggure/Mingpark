@@ -5,7 +5,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-
+/**
+ * Redis Sorted Set 및 Set을 활용한 공연 예매 대기열 관리 서비스.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -17,7 +19,11 @@ public class WaitingService {
     private static final String ACTIVE_KEY_PREFIX = "queue:active:concert:";
 
     /**
-     * 1. 대기열 진입
+     * 특정 공연의 대기열 진입 및 순위 조회 처리.
+     *
+     * @param concertId 공연 고유 식별 ID
+     * @param memberId 회원의 고유 ID
+     * @return 대기 상태 및 현재 순위 정보 DTO
      */
     public WaitingStatusResponseDto joinQueue(Long concertId, Long memberId) {
         String waitKey = WAIT_KEY_PREFIX + concertId;
@@ -42,7 +48,11 @@ public class WaitingService {
     }
 
     /**
-     * 2. 대기 상태 조회
+     * 특정 공연의 대기열 현재 상태 및 실시간 대기 순위 조회.
+     *
+     * @param concertId 공연 고유 식별 ID
+     * @param memberId 회원의 고유 ID
+     * @return 진입 허가 또는 대기 순위 정보 DTO
      */
     public WaitingStatusResponseDto getStatus(Long concertId, Long memberId) {
         String waitKey = WAIT_KEY_PREFIX + concertId;
@@ -68,7 +78,10 @@ public class WaitingService {
     }
 
     /**
-     * 3. 스케줄러가 특정 공연의 대기열을 처리할 수 있도록 동적으로 변경
+     * 대기열 순서에 따른 진입 허가 및 활성 큐 이관 처리.
+     *
+     * @param concertId 공연 고유 식별 ID
+     * @param count 진입 허가 처리할 대상 인원수
      */
     public void allowEntry(Long concertId, int count) {
         String waitKey = WAIT_KEY_PREFIX + concertId;
@@ -91,7 +104,12 @@ public class WaitingService {
         // 10분 TTL 설정
         redisTemplate.expire(activeKey, 5, java.util.concurrent.TimeUnit.MINUTES);
     }
-
+    /**
+     * 특정 회원의 대기열 및 활성 큐 점유 데이터 강제 삭제.
+     *
+     * @param concertId 공연 고유 식별 ID
+     * @param memberId 회원의 고유 ID
+     */
     public void clearUser(Long concertId, Long memberId) {
         redisTemplate.opsForZSet().remove(WAIT_KEY_PREFIX + concertId, String.valueOf(memberId));
         redisTemplate.opsForSet().remove(ACTIVE_KEY_PREFIX + concertId, String.valueOf(memberId));
