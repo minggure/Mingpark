@@ -76,4 +76,15 @@ public class Member {
         this.point -= amount;
     }
 
+    /**
+     * 회원의 보유 포인트를 증가시킨다.
+     *
+     * <p>예매 환불처럼 사용자에게 포인트를 복구해야 하는 경우 사용한다.</p>
+     *
+     * @param amount 증가시킬 포인트 금액
+     */
+    public void addPoint(int amount) {
+        this.point += amount;
+    }
+
 }

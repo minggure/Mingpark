@@ -81,6 +81,17 @@ public class Reservation {
         this.cancelledAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
+    /**
+     * 예매를 취소 상태로 변경한다.
+     *
+     * <p>환불이 완료되었거나 사용자가 예매를 취소한 경우 호출하며,
+     * 취소 시각과 수정 시각을 현재 시각으로 갱신한다.</p>
+     */
+    public void cancel() {
+        this.status = ReservationStatus.CANCELLED;
+        this.cancelledAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
 }
 
 

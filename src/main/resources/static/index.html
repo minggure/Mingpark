@@ -403,6 +403,11 @@
 
                     <div class="actions reservation-actions">
                         <button class="btn btn-secondary" onclick="showMyReservations()">목록으로</button>
+                        ${reservation.cancellable ? `
+                            <button class="btn btn-refund" onclick="refundReservation(${reservation.reservationId})">
+                                환불하기
+                            </button>
+                        ` : ''}
                     </div>
                 `;
             })
@@ -417,6 +422,37 @@
                         <button class="btn btn-secondary" onclick="showMyReservations()">목록으로</button>
                     </div>
                 `;
+            });
+    }
+
+    function refundReservation(reservationId) {
+        if (!confirm('정말 환불하시겠습니까?')) return;
+
+        fetch(`/api/users/me/reservations/${reservationId}/refund`, {
+            method: 'POST',
+            credentials: 'include'
+        })
+            .then(res => {
+                if (res.status === 401 || res.status === 403) {
+                    handle401Error();
+                    return null;
+                }
+
+                return res.json();
+            })
+            .then(result => {
+                if (!result) return;
+
+                if (result.status === 'success') {
+                    alert(result.message || '환불이 완료되었습니다.');
+                    showMyReservations();
+                    return;
+                }
+
+                alert(result.message || '환불에 실패했습니다.');
+            })
+            .catch(() => {
+                alert('환불 처리 중 오류가 발생했습니다.');
             });
     }
 
@@ -731,7 +767,7 @@
         nextBtn.disabled = currentPage === totalPages - 1; nextBtn.onclick = () => loadConcerts(currentPage + 1);
         pageContainer.appendChild(nextBtn);
     }
-    // 💡 팝업창에서 [결제하기] 버튼을 클릭했을 때 실행되는 함수
+    //  팝업창에서 [결제하기] 버튼을 클릭했을 때 실행되는 함수
     async function proceedPayment() {
         closeModal('payment-modal'); // 일단 결제창을 닫습니다.
 
@@ -742,7 +778,7 @@
         loadSeats(); // 최신 좌석 상태로 새로고침
     }
 
-    // 💡 팝업창에서 [취소] 버튼을 클릭했을 때 실행되는 함수
+    //  팝업창에서 [취소] 버튼을 클릭했을 때 실행되는 함수
     async function cancelPayment() {
         closeModal('payment-modal'); // 일단 결제창을 닫습니다.
 
