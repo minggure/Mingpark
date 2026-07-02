@@ -624,3 +624,90 @@ h2 {
         display: none;
     }
 }
+
+
+.payment-modal-box {
+    width: 400px;
+    text-align: left;
+}
+
+.payment-header {
+    margin-top: 0;
+    text-align: center;
+}
+
+.receipt-box {
+    background: #f9f9f9;
+    padding: 18px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+.receipt-box p {
+    margin: 0;
+}
+
+.receipt-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.receipt-value {
+    display: inline-block;
+    min-width: 90px;
+    text-align: right;
+}
+
+.text-red { color: #e53935; font-weight: bold; }
+.text-bold { font-weight: bold; }
+
+.divider-dashed {
+    border: 0;
+    border-top: 1px dashed #ccc;
+    margin: 12px 0;
+}
+
+.divider-solid {
+    border: 0;
+    border-top: 2px solid #ddd;
+    margin: 10px 0;
+}
+
+.terms-box {
+    font-size: 11px;
+    color: #666;
+    background: #eee;
+    padding: 10px;
+    border-radius: 5px;
+    height: 60px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+
+.agree-label {
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    cursor: pointer;
+}
+
+.agree-checkbox {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+
+#btn-pay-submit:disabled {
+    background-color: #ccc !important;
+    cursor: not-allowed !important;
+}
+#btn-pay-submit:not(:disabled) {
+    background-color: #4CAF50 !important;
+    cursor: pointer !important;
+}
