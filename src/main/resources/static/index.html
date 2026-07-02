@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Ming Park - 인기 공연 예매</title>
     <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/mypage.js" defer></script>
 </head>
 <body>
 
@@ -295,6 +296,7 @@
                 }
             });
     }
+
     function loadConcerts(page) {
         currentPage = page;
         fetch(`/api/concerts?page=${page}&size=6`)
@@ -577,7 +579,7 @@
         nextBtn.disabled = currentPage === totalPages - 1; nextBtn.onclick = () => loadConcerts(currentPage + 1);
         pageContainer.appendChild(nextBtn);
     }
-    // 💡 팝업창에서 [결제하기] 버튼을 클릭했을 때 실행되는 함수
+    //  팝업창에서 [결제하기] 버튼을 클릭했을 때 실행되는 함수
     async function proceedPayment() {
         closeModal('payment-modal'); // 일단 결제창을 닫습니다.
 
@@ -588,7 +590,7 @@
         loadSeats(); // 최신 좌석 상태로 새로고침
     }
 
-    // 💡 팝업창에서 [취소] 버튼을 클릭했을 때 실행되는 함수
+    //  팝업창에서 [취소] 버튼을 클릭했을 때 실행되는 함수
     async function cancelPayment() {
         closeModal('payment-modal'); // 일단 결제창을 닫습니다.
 
