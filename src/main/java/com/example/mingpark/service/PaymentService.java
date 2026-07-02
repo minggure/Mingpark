@@ -26,7 +26,7 @@ public class PaymentService {
     private final PaymentHistoryRepository paymentHistoryRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final HoldLockFacade holdLockFacade;
-
+    private final WaitingService waitingService;
     public void payment(Long reservationId, Long memberId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("예매내역이 없습니다."));
@@ -78,7 +78,7 @@ public class PaymentService {
         paymentHistoryRepository.save(history);
 
         holdLockFacade.releaseHold(reservation.getSeat().getId());
-
+        waitingService.clearUser(reservation.getConcert().getConcertId(), memberId);
         eventPublisher.publishEvent(
                 new PaymentSucceededEvent(reservation.getId(), member.getId(), price)
         );
@@ -110,7 +110,7 @@ public class PaymentService {
         paymentHistoryRepository.save(history);
 
         holdLockFacade.releaseHold(reservation.getSeat().getId());
-
+        waitingService.clearUser(reservation.getConcert().getConcertId(), memberId);
         eventPublisher.publishEvent(
                 new PaymentFailedEvent(
                         reservation.getId(),

@@ -37,7 +37,7 @@ public class HoldLockFacade {
      */
     public  void releaseHold(Long seatId){
         String lockKey = "lock:seat:" + seatId;
-
+        log.info("좌석 임시 점유 해제 - seatId={}", seatId);
         redisTemplate.delete(lockKey);
     }
     }
