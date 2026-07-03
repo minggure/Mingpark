@@ -4,6 +4,30 @@
     <meta charset="UTF-8">
     <title>Ming Park - 인기 공연 예매</title>
     <link rel="stylesheet" href="/css/style.css">
+<<<<<<< HEAD
+    <script src="/js/mypage.js" defer></script>
+    <style>
+        /* 💡 점 3개(케밥 메뉴)를 위한 추가 CSS */
+        .concert-card { position: relative; } /* 메뉴 위치 기준점 */
+        .kebab-menu { position: absolute; top: 10px; right: 10px; z-index: 10; }
+        .kebab-btn {
+            background: white; border: 1px solid #ddd; border-radius: 50%;
+            width: 30px; height: 30px; font-size: 18px; font-weight: bold;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding-bottom: 4px;
+        }
+        .kebab-dropdown {
+            display: none; position: absolute; right: 0; top: 35px;
+            background: white; border: 1px solid #ddd; box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            border-radius: 5px; min-width: 100px; overflow: hidden;
+        }
+        .kebab-dropdown.show { display: block; }
+        .kebab-dropdown button {
+            width: 100%; padding: 10px; border: none; background: transparent;
+            color: #dc3545; font-weight: bold; cursor: pointer; text-align: center;
+        }
+        .kebab-dropdown button:hover { background: #f8d7da; }
+=======
     <style>
         /* 대기열 전용 심플 스타일링 추가 */
         .waiting-box {
@@ -23,6 +47,7 @@
             font-weight: bold;
             margin: 10px 0;
         }
+>>>>>>> 27f6d109f98f02616984f5c29fa48352252f9d0d
     </style>
 </head>
 <body>
@@ -237,6 +262,7 @@
                     localStorage.setItem("loginMemberRole", result.role);
                     closeModal('login-modal');
                     checkLoginStatus();
+                    loadConcerts(currentPage); // 💡 로그인 시 관리자 메뉴 확인을 위해 목록 새로고침
                 } else { alert('정보를 다시 확인해주세요.'); }
             });
     }
@@ -328,6 +354,7 @@
             });
     }
 
+    // 💡 loadConcerts: 관리자일 때만 카드 우측 상단에 점 3개 메뉴 렌더링
     function loadConcerts(page) {
         currentPage = page;
         fetch(`/api/concerts?page=${page}&size=6`)
@@ -335,11 +362,28 @@
             .then(data => {
                 const container = document.getElementById('concert-container');
                 container.innerHTML = '';
+
+                const userRole = localStorage.getItem("loginMemberRole");
+                const isAdmin = userRole === 'ADMIN';
+
                 data.content.forEach(concert => {
                     const card = document.createElement('div');
                     card.className = 'concert-card';
                     card.onclick = () => loadConcertDetail(concert.concertId);
+
+                    // 💡 점 3개(케밥 메뉴) HTML. 이벤트 버블링 방지 처리 포함
+                    const kebabHtml = isAdmin ? `
+    <div class="kebab-menu" onclick="event.stopPropagation()">
+        <button class="kebab-btn" onclick="toggleKebabMenu(event, ${concert.concertId})">⋮</button>
+        <div id="dropdown-${concert.concertId}" class="kebab-dropdown">
+            <button onclick="editConcertAction(${concert.concertId})">공연 수정</button> <!-- 💡 추가 -->
+            <button onclick="deleteConcertAction(event, ${concert.concertId})">공연 삭제</button>
+        </div>
+    </div>
+` : '';
+
                     card.innerHTML = `
+                        ${kebabHtml}
                         <div>
                             <img class="concert-image" src="${concert.image}">
                             <div class="concert-title">${concert.concertTitle}</div>
@@ -474,7 +518,7 @@
 
                     if (seat.status === 'AVAILABLE') {
                         seatDiv.onclick = () => {
-                            if (confirm(`${seat.seatNumber}번 좌석을 5분간 임시 선점하시겠습니까?`)) {
+                            if (confirm(`${seat.seatNumber}번 좌석을 선택 하시겠습니까?`)) {
                                 const actualSeatId = seat.seatId !== undefined ? seat.seatId : (seat.id !== undefined ? seat.id : seat.seatNumber);
                                 startReservationFlow(targetConcertId, actualSeatId, seat.seatNumber);
                             }
@@ -492,7 +536,7 @@
                     seatDiv.className = `seat AVAILABLE`;
                     seatDiv.innerText = i;
                     seatDiv.onclick = () => {
-                        if (confirm(`${i}번 좌석을 5분간 임시 선점하시겠습니까?`)) {
+                        if (confirm(`${i}번 좌석을 선택하시겠습니까?`)) {
                             startReservationFlow(targetConcertId, i, i);
                         }
                     };
@@ -503,6 +547,7 @@
     }
 
     function startReservationFlow(concertId, seatId, seatNumber) {
+        //좌석 선정시 HOLD 상태로 바꾸는 API 호출
         fetch(`/api/concerts/${concertId}/seats/${seatId}/hold`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -528,7 +573,6 @@
 
                     currentReservationId = reservationId;
 
-
                     try {
                         const pointRes = await fetch('/api/users/me/points', { credentials: 'include' });
                         if (pointRes.ok) {
@@ -539,17 +583,14 @@
                         console.error("잔액 조회 중 에러 발생:", e);
                     }
 
-                    // 영수증에 글자 채워넣기
                     document.getElementById("pay-concert-title").innerText = currentConcertTitle;
                     document.getElementById("pay-seat-number").innerText = seatNumber;
                     document.getElementById("pay-price").innerText = Number(currentConcertPrice).toLocaleString();
                     document.getElementById("my-point").innerText = Number(myCurrentPoints).toLocaleString();
 
-                    // 잔액 계산하기 (내 포인트 - 공연 가격)
                     const remainPoint = myCurrentPoints - currentConcertPrice;
                     const remainEl = document.getElementById("pay-remain-point");
 
-                    // 잔액이 마이너스면 빨간색으로 경고, 아니면 초록색으로 표시
                     if (remainPoint < 0) {
                         remainEl.innerText = "잔액 부족 (" + Number(remainPoint).toLocaleString() + ")";
                         remainEl.style.color = "#e53935";
@@ -558,17 +599,13 @@
                         remainEl.style.color = "#4CAF50";
                     }
 
-                    // 창 열 때마다 체크박스 끄고, 결제 버튼 회색으로 잠가두기 (초기화)
                     document.getElementById("agree-checkbox").checked = false;
                     const payBtn = document.getElementById("btn-pay-submit");
                     payBtn.disabled = true;
                     payBtn.style.backgroundColor = "#ccc";
                     payBtn.style.cursor = "not-allowed";
 
-                    // 세팅 다 끝났으니 진짜로 모달창 띄우기!
                     openModal('payment-modal');
-
-
 
                 } else {
                     alert(result.message || "아쉽습니다! 이미 다른 분이 선택한 좌석입니다.");
@@ -658,32 +695,83 @@
         nextBtn.disabled = currentPage === totalPages - 1; nextBtn.onclick = () => loadConcerts(currentPage + 1);
         pageContainer.appendChild(nextBtn);
     }
-    //  팝업창에서 [결제하기] 버튼을 클릭했을 때 실행되는 함수
+
     async function proceedPayment() {
-        closeModal('payment-modal'); // 일단 결제창을 닫습니다.
-
-        // 아까 2단계에서 몰래 저장해뒀던 currentReservationId를 꺼내서 결제 API로 보냅니다!
+        closeModal('payment-modal');
         await payReservation(currentReservationId);
-
-        closeModal('seat-modal'); // 뒤에 깔려있던 좌석표 창도 닫아줍니다.
-        loadSeats(); // 최신 좌석 상태로 새로고침
+        closeModal('seat-modal');
+        loadSeats();
     }
 
-    //  팝업창에서 [취소] 버튼을 클릭했을 때 실행되는 함수
     async function cancelPayment() {
-        closeModal('payment-modal'); // 일단 결제창을 닫습니다.
-
-        // 취소 API로 예약 번호를 보냅니다.
+        closeModal('payment-modal');
         await failReservation(currentReservationId);
         alert("결제가 취소되었습니다.");
-
         closeModal('seat-modal');
-        loadSeats(); // 좌석을 다시 새로고침해서 파란색(AVAILABLE)으로 돌아온 걸 보여줍니다.
+        loadSeats();
     }
+
     document.getElementById("refresh-seats-btn").onclick = loadSeats;
     function togglePayButton() {
         const isChecked = document.getElementById("agree-checkbox").checked;
         document.getElementById("btn-pay-submit").disabled = !isChecked;
+    }
+
+    // 💡 점 3개 팝업 메뉴 토글 함수
+    function toggleKebabMenu(event, concertId) {
+        event.stopPropagation(); // 카드 클릭(상세페이지 이동) 방지
+        const dropdown = document.getElementById(`dropdown-${concertId}`);
+
+        // 다른 열려있는 메뉴 닫기
+        document.querySelectorAll('.kebab-dropdown').forEach(el => {
+            if(el !== dropdown) el.classList.remove('show');
+        });
+        dropdown.classList.toggle('show');
+    }
+
+    // 💡 실제 공연 삭제 호출 함수
+    function deleteConcertAction(event, concertId) {
+        event.stopPropagation(); // 카드 클릭 방지
+        if (!confirm("⚠️ 정말 이 공연을 삭제하시겠습니까? 연결된 좌석과 예매 내역이 모두 삭제됩니다.")) {
+            document.getElementById(`dropdown-${concertId}`).classList.remove('show');
+            return;
+        }
+
+        fetch(`/api/concerts/${concertId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        })
+            .then(async res => {
+                if (res.ok) {
+                    alert("공연이 성공적으로 삭제되었습니다.");
+                    loadConcerts(currentPage); // 새로고침 없이 해당 페이지 목록 갱신
+                } else {
+                    const errorText = await res.text();
+                    alert("삭제 실패: " + errorText);
+                }
+            })
+            .catch(err => {
+                console.error("삭제 중 에러:", err);
+                alert("서버와 통신 중 오류가 발생했습니다.");
+            });
+    }
+
+    // 💡 빈 화면 클릭 시 열려있는 팝업 메뉴 모두 닫기
+    document.addEventListener('click', function() {
+        document.querySelectorAll('.kebab-dropdown').forEach(el => {
+            el.classList.remove('show');
+        });
+    });
+
+    // index.html 에 있는 수정 버튼 함수
+    function editConcertAction(concertId) {
+        fetch(`/api/concerts/${concertId}`)
+            .then(res => res.json())
+            .then(concert => {
+                // 데이터를 통째로 저장해서 넘깁니다.
+                localStorage.setItem("editConcertData", JSON.stringify(concert));
+                location.href = `/register.html?mode=edit&id=${concertId}`;
+            });
     }
 </script>
 </body>

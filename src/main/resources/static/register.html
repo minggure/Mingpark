@@ -136,22 +136,22 @@
 </a>
 
 <div class="login-box">
-    <h2>🎤 새 공연 등록</h2>
+    <h2 id="page-title">🎤 새 공연 등록</h2>
 
     <div class="input-group">
-        <input type="text" id="title" placeholder="공연 제목 (예: 2026 아이유 콘서트)" required>
+        <input type="text" id="concertTitle" placeholder="공연 제목 (예: 2026 아이유 콘서트)" required>
     </div>
     <div class="input-group">
         <input type="text" id="place" placeholder="공연 장소 (예: 잠실 주경기장)" required>
     </div>
     <div class="input-group">
-        <input type="date" id="date" required>
+        <input type="date" id="concertDate" required>
     </div>
     <div class="input-group">
-        <input type="time" id="time" required>
+        <input type="time" id="concertTime" required>
     </div>
     <div class="input-group">
-        <input type="number" id="price" placeholder="티켓 가격 (숫자만 입력)" required>
+        <input type="number" id="concertPrice" placeholder="티켓 가격 (숫자만 입력)" required>
     </div>
     <div class="input-group">
         <!-- 업로드 API가 반환한 이미지 경로를 보관하고 최종 공연 등록 요청에 포함한다. -->
@@ -176,12 +176,11 @@
         <input type="datetime-local" id="reservationEndAt" required>
     </div>
 
-    <button class="submit-btn" onclick="submitConcert()">등록하기</button>
+    <button class="submit-btn" id="submit-btn">등록하기</button>
     <button class="cancel-btn" onclick="location.href='/'">취소</button>
 </div>
 
 <script>
-    // 일반 사용자가 /register.html 로 직접 들어오면, /으로 돌려보냄
     if (localStorage.getItem("loginMemberRole") !== "ADMIN") {
         alert("관리자만 공연을 등록할 수 있습니다.");
         location.href = "/";
@@ -271,6 +270,81 @@
                     location.href = '/';
                 } else {
                     alert('등록 실패! 다시 시도해주세요.');
+                }
+            });
+    }
+
+    window.onload = () => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('mode') === 'edit') {
+            const data = JSON.parse(localStorage.getItem("editConcertData"));
+            // input 칸에 value = data.concertTitle 이런 식으로 다 채워넣기
+            // 버튼 텍스트를 "등록하기" -> "수정하기"로 변경
+            // 버튼 onclick을 updateConcert() API 호출 함수로 변경
+        }
+    }
+    window.onload = () => {
+        const params = new URLSearchParams(window.location.search);
+        const mode = params.get('mode');
+        const concertId = params.get('id');
+
+        // 1. 요소들이 존재하는지 먼저 확인하는 방어 코드
+        const pageTitle = document.getElementById('page-title');
+        const submitBtn = document.getElementById('submit-btn');
+
+        if (mode === 'edit') {
+            if (pageTitle) pageTitle.innerText = "🎵 공연 수정";
+            if (submitBtn) submitBtn.innerText = "수정하기";
+
+            const data = JSON.parse(localStorage.getItem("editConcertData"));
+
+            // 2. 이제 위에서 맞춘 ID들을 사용합니다.
+            document.getElementById('concertTitle').value = data.concertTitle;
+            document.getElementById('place').value = data.place;
+            document.getElementById('concertDate').value = data.concertDate;
+            document.getElementById('concertTime').value = data.concertTime;
+            document.getElementById('concertPrice').value = data.concertPrice;
+            document.getElementById('description').value = data.description;
+            document.getElementById('reservationStartAt').value = data.reservationStartAt;
+            document.getElementById('reservationEndAt').value = data.reservationEndAt;
+
+            // 이미지 처리
+            if(data.image) {
+                document.getElementById('image').value = data.image;
+                document.getElementById('image-preview').src = data.image;
+                document.getElementById('image-preview').style.display = 'block';
+            }
+
+            submitBtn.onclick = () => updateConcert(concertId);
+        } else {
+            submitBtn.onclick = () => submitConcert();
+        }
+    };
+
+    function updateConcert(concertId) {
+        const data = {
+            concertTitle: document.getElementById('concertTitle').value,
+            place: document.getElementById('place').value,
+            concertDate: document.getElementById('concertDate').value,
+            concertTime: document.getElementById('concertTime').value,
+            concertPrice: document.getElementById('concertPrice').value,
+            description: document.getElementById('description').value,
+            image: document.getElementById('image').value,
+            reservationStartAt: document.getElementById('reservationStartAt').value,
+            reservationEndAt: document.getElementById('reservationEndAt').value
+        };
+
+        fetch(`/api/concerts/${concertId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+            .then(res => {
+                if (res.ok) {
+                    alert("수정 완료!");
+                    location.href = "/index.html";
+                } else {
+                    alert("수정 실패...");
                 }
             });
     }

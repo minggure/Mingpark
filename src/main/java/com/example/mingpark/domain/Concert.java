@@ -1,5 +1,6 @@
 package com.example.mingpark.domain;
 
+import com.example.mingpark.dto.ConcertCreatRequestDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -95,5 +96,17 @@ public class Concert {
 
         LocalDateTime now = LocalDateTime.now();
         return !now.isBefore(reservationStartAt) && !now.isAfter(reservationEndAt);
+    }
+
+    public void update(ConcertCreatRequestDto request) {
+        this.concertTitle = request.getConcertTitle();
+        this.concertDate = request.getConcertDate();
+        this.concertTime = request.getConcertTime();
+        this.concertPrice = request.getConcertPrice();
+        this.description = request.getDescription();
+        this.place = request.getPlace();
+        this.reservationStartAt = request.getReservationStartAt();
+        this.reservationEndAt = request.getReservationEndAt();
+        this.image = request.getImage();
     }
 }

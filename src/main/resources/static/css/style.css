@@ -634,7 +634,64 @@ h2 {
         display: none;
     }
 }
+/* 💡 점 3개(케밥 메뉴) 스타일 추가 */
+.concert-card {
+    position: relative; /* 팝업 위치를 잡기 위해 필수 (이미 있다면 패스) */
+}
 
+.kebab-menu {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+}
+
+.kebab-btn {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.kebab-dropdown {
+    display: none; /* 기본은 숨김 */
+    position: absolute;
+    right: 0;
+    top: 35px;
+    background: white;
+    border: 1px solid #ddd;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    border-radius: 5px;
+    min-width: 100px;
+    overflow: hidden;
+}
+
+.kebab-dropdown.show {
+    display: block; /* 클릭 시 보여줌 */
+}
+
+.kebab-dropdown button {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    background: transparent;
+    color: #dc3545; /* 삭제니까 빨간색 */
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+}
+
+.kebab-dropdown button:hover {
+    background: #f8d7da;
+}
 
 .payment-modal-box {
     width: 400px;
