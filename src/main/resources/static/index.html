@@ -4,7 +4,26 @@
     <meta charset="UTF-8">
     <title>Ming Park - 인기 공연 예매</title>
     <link rel="stylesheet" href="/css/style.css">
-    <script src="/js/mypage.js" defer></script>
+    <style>
+        /* 대기열 전용 심플 스타일링 추가 */
+        .waiting-box {
+            text-align: center;
+            padding: 30px;
+        }
+        .waiting-spinner {
+            font-size: 40px;
+            margin-bottom: 15px;
+            animation: spin 2s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .queue-count {
+            font-size: 24px;
+            color: #ff4757;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+    </style>
 </head>
 <body>
 
@@ -27,6 +46,18 @@
     </section>
 
     <section id="mypage-section" class="page-section"></section>
+</div>
+
+<div class="modal-overlay" id="waiting-modal">
+    <div class="modal-box">
+        <div class="waiting-box">
+            <div class="waiting-spinner">⏳</div>
+            <h3>서비스 접속 대기 중입니다</h3>
+            <p>현재 동시 접속자가 많아 순차적으로 진입 중입니다.<br>잠시만 기다려주시면 좌석 선택 창으로 이동합니다.</p>
+            <div class="queue-count" id="queue-wait-count">계산 중...</div>
+            <p style="font-size: 13px; color: #888;">⚠️ 브라우저를 닫거나 새로고침하면 대기 시간이 늘어날 수 있습니다.</p>
+        </div>
+    </div>
 </div>
 
 <div class="modal-overlay" id="login-modal">
@@ -134,6 +165,7 @@
     let currentReservationId = null;
     let currentConcertTitle = "";
     let currentConcertPrice = 0;
+    let pollingIntervalId = null;
 
     window.onload = function() {
         syncLoginStatus();
@@ -252,7 +284,6 @@
         loadConcerts(currentPage);
     }
 
-    // mypage.html로 비동기 수신하여 주입하는 SPA 제어 함수
     function showMyPage() {
         const myPageSection = document.getElementById('mypage-section');
 
@@ -288,7 +319,7 @@
                 document.getElementById('my-point').innerText = Number(myCurrentPoints).toLocaleString() + "P";
             })
             .catch((err) => {
-                console.warn("백엔드 API 미완성 또는 유휴 상태로 가상 마이페이지 데이터 출력: ", err.message);
+                console.warn("가상 데이터 출력: ", err.message);
                 if (document.getElementById('my-name')) {
                     document.getElementById('my-name').innerText = localStorage.getItem("loginMemberName") || "테스트유저";
                     document.getElementById('my-email').innerText = "test-user@mingpark.com";
@@ -356,6 +387,7 @@
             .catch(() => alert("공연 상세 정보를 불러오는 데 실패했습니다."));
     }
 
+    /* 🌟 [수정] 2. 예매하기 클릭 시 대기열 참가 프로세스로 전면 교체 */
     function tryReserve() {
         const loginUser = localStorage.getItem("loginMemberName");
         if (!loginUser) {
@@ -363,8 +395,56 @@
             openModal('login-modal');
             return;
         }
-        openModal('seat-modal');
-        loadSeats();
+
+        if (!targetConcertId) return;
+
+        // 대기열 참가 API 요청 호출
+        openModal('waiting-modal');
+        document.getElementById('queue-wait-count').innerText = "대기열 등록 중...";
+
+        fetch(`/api/concerts/${targetConcertId}/waiting/join`, { method: 'POST', credentials: 'include' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'ALLOWED') {
+                    // 이미 허가된 유저인 경우 즉시 좌석 선택창으로 워프
+                    closeModal('waiting-modal');
+                    openModal('seat-modal');
+                    loadSeats();
+                } else {
+                    // 대기 상태인 경우 1초마다 실시간 순번 조회 시작 (Polling)
+                    document.getElementById('queue-wait-count').innerText = `내 앞 대기 인원: ${data.rank}명`;
+                    startWaitingPolling();
+                }
+            })
+            .catch(() => {
+                alert("대기열 참가에 실패했습니다. 다시 시도해 주세요.");
+                closeModal('waiting-modal');
+            });
+    }
+
+    /* 🌟 [추가] 3. 1초 간격 실시간 대기 순번 추적 타이머 함수 */
+    function startWaitingPolling() {
+        if (pollingIntervalId) clearInterval(pollingIntervalId);
+
+        pollingIntervalId = setInterval(() => {
+            fetch(`/api/concerts/${targetConcertId}/waiting/status`, { credentials: 'include' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'ALLOWED') {
+                        //내 차례가 되면 대기열 모달 닫고 좌석 모달 오픈
+                        clearInterval(pollingIntervalId);
+                        pollingIntervalId = null;
+                        closeModal('waiting-modal');
+
+                        openModal('seat-modal');
+                        loadSeats();
+                    } else {
+                        // 아직 대기 중이면 화면 텍스트 실시간 갱신
+                        document.getElementById('queue-wait-count').innerText = `내 앞 대기 인원: ${data.rank}명`;
+                    }
+                })
+                .catch(() => console.error("대기열 상태를 가져오는 중 오류 발생"));
+        }, 1000); // 1초 주기로 체크
     }
 
     function loadSeats() {
@@ -547,7 +627,6 @@
         return await res.json();
     }
 
-    // 시큐리티 차단 및 세션 만료 예외 대응 제어 함수
     function handle401Error() {
         alert("🔒 세션이 만료되어 로그인이 해제되었습니다. 다시 로그인해 주세요!");
         closeModal('seat-modal');
