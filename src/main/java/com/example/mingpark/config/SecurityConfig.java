@@ -50,6 +50,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/members/signup").permitAll()
                         .requestMatchers(HttpMethod.POST, "/members/login").permitAll()
 
+                        // 대기열 관련 API 접근 인가 세분화 처리
+                        .requestMatchers(HttpMethod.POST, "/api/concerts/*/waiting/join").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/concerts/*/waiting/status").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/concerts/*/waiting/leave").permitAll()
+
                         // 공연 조회 API는 누구나 가능
                         .requestMatchers(HttpMethod.GET, "/api/concerts").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/concerts/*").permitAll()
