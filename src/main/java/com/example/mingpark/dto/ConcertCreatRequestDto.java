@@ -17,7 +17,6 @@ public class ConcertCreatRequestDto {
     private final String concertTitle;
     private final LocalTime concertTime;
     private final LocalDate concertDate;
-    @NotBlank
     private final int concertPrice;
     private final String image; // 붙여넣기 이미지 업로드 API가 반환한 /uploads/... 경로
     private final String description;
