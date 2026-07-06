@@ -32,6 +32,7 @@ public class PaymentService {
     private final HoldLockFacade holdLockFacade;
     private final WaitingService waitingService;
     private final StringRedisTemplate redisTemplate;
+
     /**
      * 특정 예매 건에 대한 포인트 차감 결제 승인 및 영속화 처리.
      *
@@ -53,22 +54,23 @@ public class PaymentService {
         if (reservation.getStatus() != ReservationStatus.PENDING) {
             throw new IllegalStateException("결제 대기 상태인 예매만 결제할 수 있습니다.");
         }
-        // --- [추가된 방어 로직 시작] ---
+
+      
         Long seatId = reservation.getSeat().getId();
         String lockKey = "lock:seat:" + seatId;
 
-        // 1. Redis에서 현재 좌석의 점유자 ID를 가져옵니다.
         String holdingMemberId = redisTemplate.opsForValue().get(lockKey);
 
-        // 2. 점유 시간이 만료되어 키가 사라졌는지 확인
+   
         if (holdingMemberId == null) {
             throw new IllegalStateException("결제 시간이 초과되어 결제 실패합니다.");
         }
-        // 3. 락이 존재하더라도, 현재 결제하려는 사람과 주인이 일치하는지 확인
+     
         if (!holdingMemberId.equals(String.valueOf(memberId))) {
             throw new IllegalStateException("현재 다른 사용자가 선점 중인 좌석입니다.");
         }
-        // --- [추가된 방어 로직 끝] ---
+
+
 
 
         int price = reservation.getTotalPrice();
@@ -94,6 +96,7 @@ public class PaymentService {
 
             throw new IllegalStateException("포인트 부족");
         }
+
 
         member.decreasePoint(price);
         reservation.completePayment();
@@ -160,4 +163,5 @@ public class PaymentService {
                 )
         );
     }
+
 }
