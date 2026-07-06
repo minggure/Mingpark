@@ -14,6 +14,7 @@ import com.example.mingpark.repository.ReservationRepository;
 import com.example.mingpark.facade.HoldLockFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +31,7 @@ public class PaymentService {
     private final ApplicationEventPublisher eventPublisher;
     private final HoldLockFacade holdLockFacade;
     private final WaitingService waitingService;
+    private final StringRedisTemplate redisTemplate;
 
     /**
      * 특정 예매 건에 대한 포인트 차감 결제 승인 및 영속화 처리.
@@ -51,6 +53,25 @@ public class PaymentService {
         if (reservation.getStatus() != ReservationStatus.PENDING) {
             throw new IllegalStateException("결제 대기 상태인 예매만 결제할 수 있습니다.");
         }
+        /**
+         * 시간 초과시 결제 실패 로직
+         */
+        Long seatId = reservation.getSeat().getId();
+        String lockKey = "lock:seat:" + seatId;
+
+
+        String holdingMemberId = redisTemplate.opsForValue().get(lockKey);
+
+
+        if (holdingMemberId == null) {
+            throw new IllegalStateException("결제 시간이 초과되어 좌석 선점이 해제되었습니다.");
+        }
+
+        if (!holdingMemberId.equals(String.valueOf(memberId))) {
+            throw new IllegalStateException("현재 다른 사용자가 선점 중인 좌석입니다.");
+        }
+
+
         int price = reservation.getTotalPrice();
 
         if (member.getPoint() < price) {
@@ -74,6 +95,7 @@ public class PaymentService {
 
             throw new IllegalStateException("포인트 부족");
         }
+
 
         member.decreasePoint(price);
         reservation.completePayment();
@@ -140,4 +162,5 @@ public class PaymentService {
                 )
         );
     }
+
 }

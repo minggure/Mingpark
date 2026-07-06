@@ -4,10 +4,9 @@
     <meta charset="UTF-8">
     <title>Ming Park - 인기 공연 예매</title>
     <link rel="stylesheet" href="/css/style.css">
-<<<<<<< HEAD
     <script src="/js/mypage.js" defer></script>
     <style>
-        /* 💡 점 3개(케밥 메뉴)를 위한 추가 CSS */
+
         .concert-card { position: relative; } /* 메뉴 위치 기준점 */
         .kebab-menu { position: absolute; top: 10px; right: 10px; z-index: 10; }
         .kebab-btn {
@@ -27,10 +26,9 @@
             color: #dc3545; font-weight: bold; cursor: pointer; text-align: center;
         }
         .kebab-dropdown button:hover { background: #f8d7da; }
-=======
+
     <style>
-        /* 대기열 전용 심플 스타일링 추가 */
-        .waiting-box {
+
             text-align: center;
             padding: 30px;
         }
@@ -47,7 +45,6 @@
             font-weight: bold;
             margin: 10px 0;
         }
->>>>>>> 27f6d109f98f02616984f5c29fa48352252f9d0d
     </style>
 </head>
 <body>
@@ -645,7 +642,9 @@
         if (res.ok && result.status === "success") {
             alert(result.message || "결제가 완료되었습니다.");
         } else {
-            alert(result.message || "결제에 실패했습니다.");
+            alert(result.message || "결제에 실패했습니다. (시간 초과)");
+            closeModal('payment-modal');
+            loadSeats();
         }
     }
 
