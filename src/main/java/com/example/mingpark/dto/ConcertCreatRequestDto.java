@@ -1,6 +1,5 @@
 package com.example.mingpark.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

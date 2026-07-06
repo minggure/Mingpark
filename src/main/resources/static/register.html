@@ -245,11 +245,11 @@
 
         // 포스터의 실제 파일 대신 서버가 반환한 /uploads/... 경로를 JSON에 담는다.
         const data = {
-            concertTitle: document.getElementById('concertTitle').value,
+            concertTitle: document.getElementById('title').value,
             place: document.getElementById('place').value,
-            concertDate: document.getElementById('concertDate').value,
-            concertTime: document.getElementById('concertTime').value + ":00",
-            concertPrice: document.getElementById('concertPrice').value,
+            concertDate: document.getElementById('date').value,
+            concertTime: document.getElementById('time').value + ":00",
+            concertPrice: document.getElementById('price').value,
             image: imageInput.value,
             description: document.getElementById('description').value,
             reservationStartAt: document.getElementById('reservationStartAt').value,
@@ -298,7 +298,7 @@
 
             const data = JSON.parse(localStorage.getItem("editConcertData"));
 
-
+            // 2. 이제 위에서 맞춘 ID들을 사용합니다.
             document.getElementById('concertTitle').value = data.concertTitle;
             document.getElementById('place').value = data.place;
             document.getElementById('concertDate').value = data.concertDate;
@@ -344,7 +344,7 @@
                     alert("수정 완료!");
                     location.href = "/index.html";
                 } else {
-                    alert("수정 실패");
+                    alert("수정 실패...");
                 }
             });
     }
