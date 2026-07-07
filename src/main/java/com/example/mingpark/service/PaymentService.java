@@ -17,7 +17,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+// 메인
 /**
  * 포인트 기반 결제 승인, 실패 처리 및 결제 이력 관리를 담당하는 서비스.
  */
