@@ -41,6 +41,7 @@ public class PaymentService {
      * @throws IllegalArgumentException 예매 내역이 없거나 본인의 예약이 아닐 경우 발생함
      * @throws IllegalStateException 결제 대기 상태가 아니거나 보유 포인트가 부족할 경우 발생함
      */
+
     public void payment(Long reservationId, Long memberId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("예매내역이 없습니다."));
@@ -53,23 +54,23 @@ public class PaymentService {
         if (reservation.getStatus() != ReservationStatus.PENDING) {
             throw new IllegalStateException("결제 대기 상태인 예매만 결제할 수 있습니다.");
         }
-        /**
-         * 시간 초과시 결제 실패 로직
-         */
+
+      
         Long seatId = reservation.getSeat().getId();
         String lockKey = "lock:seat:" + seatId;
 
-
         String holdingMemberId = redisTemplate.opsForValue().get(lockKey);
 
-
+   
         if (holdingMemberId == null) {
-            throw new IllegalStateException("결제 시간이 초과되어 좌석 선점이 해제되었습니다.");
+            throw new IllegalStateException("결제 시간이 초과되어 결제 실패합니다.");
         }
-
+     
         if (!holdingMemberId.equals(String.valueOf(memberId))) {
             throw new IllegalStateException("현재 다른 사용자가 선점 중인 좌석입니다.");
         }
+
+
 
 
         int price = reservation.getTotalPrice();
