@@ -14,6 +14,7 @@ import com.example.mingpark.repository.ReservationRepository;
 import com.example.mingpark.facade.HoldLockFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +31,7 @@ public class PaymentService {
     private final ApplicationEventPublisher eventPublisher;
     private final HoldLockFacade holdLockFacade;
     private final WaitingService waitingService;
+    private final StringRedisTemplate redisTemplate;
 
     /**
      * 특정 예매 건에 대한 포인트 차감 결제 승인 및 영속화 처리.
@@ -39,6 +41,7 @@ public class PaymentService {
      * @throws IllegalArgumentException 예매 내역이 없거나 본인의 예약이 아닐 경우 발생함
      * @throws IllegalStateException 결제 대기 상태가 아니거나 보유 포인트가 부족할 경우 발생함
      */
+
     public void payment(Long reservationId, Long memberId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("예매내역이 없습니다."));
@@ -51,6 +54,25 @@ public class PaymentService {
         if (reservation.getStatus() != ReservationStatus.PENDING) {
             throw new IllegalStateException("결제 대기 상태인 예매만 결제할 수 있습니다.");
         }
+
+      
+        Long seatId = reservation.getSeat().getId();
+        String lockKey = "lock:seat:" + seatId;
+
+        String holdingMemberId = redisTemplate.opsForValue().get(lockKey);
+
+   
+        if (holdingMemberId == null) {
+            throw new IllegalStateException("결제 시간이 초과되어 결제 실패합니다.");
+        }
+     
+        if (!holdingMemberId.equals(String.valueOf(memberId))) {
+            throw new IllegalStateException("현재 다른 사용자가 선점 중인 좌석입니다.");
+        }
+
+
+
+
         int price = reservation.getTotalPrice();
 
         if (member.getPoint() < price) {
@@ -74,6 +96,7 @@ public class PaymentService {
 
             throw new IllegalStateException("포인트 부족");
         }
+
 
         member.decreasePoint(price);
         reservation.completePayment();
@@ -140,4 +163,5 @@ public class PaymentService {
                 )
         );
     }
+
 }

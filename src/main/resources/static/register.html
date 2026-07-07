@@ -187,6 +187,7 @@
     const imagePreview = document.getElementById('image-preview');
     const uploadStatus = document.getElementById('upload-status');
 
+    // 붙여넣기 영역을 누르면 바로 Ctrl+V를 사용할 수 있도록 포커스를 준다.
     pasteZone.addEventListener('click', () => pasteZone.focus());
 
     // 클립보드 내 이미지 데이터 감지 및 붙여넣기(Ctrl+V) 이벤트 리스너
@@ -204,6 +205,7 @@
 
     // 클립보드 파일 자원을 Multipart로 변환하여 이미지 서버로 비동기 업로드하는 함수
     function uploadImage(imageFile) {
+        // JSON이 아닌 실제 파일 전송이므로 multipart/form-data용 FormData를 사용한다.
         const formData = new FormData();
         formData.append('image', imageFile);
         uploadStatus.textContent = '이미지를 업로드하는 중입니다...';
@@ -217,6 +219,7 @@
                 return response.json();
             })
             .then(result => {
+                // 업로드된 파일 경로를 저장해 미리보기와 최종 공연 등록 요청에서 재사용한다.
                 imageInput.value = result.imageUrl;
                 imagePreview.src = result.imageUrl;
                 imagePreview.style.display = 'block';
@@ -294,15 +297,15 @@
         }
 
         const data = {
-            concertTitle: concertTitleInput.value.trim(),
-            place: placeInput.value.trim(),
-            concertDate: concertDateInput.value,
-            concertTime: concertTimeInput.value + ":00",
-            concertPrice: priceInput.value,
+            concertTitle: document.getElementById('title').value,
+            place: document.getElementById('place').value,
+            concertDate: document.getElementById('date').value,
+            concertTime: document.getElementById('time').value + ":00",
+            concertPrice: document.getElementById('price').value,
             image: imageInput.value,
             description: document.getElementById('description').value,
-            reservationStartAt: reservationStartAtInput.value,
-            reservationEndAt: reservationEndAtInput.value
+            reservationStartAt: document.getElementById('reservationStartAt').value,
+            reservationEndAt: document.getElementById('reservationEndAt').value
         };
 
         fetch('/api/concerts', {
@@ -329,6 +332,7 @@
         const mode = params.get('mode');
         const concertId = params.get('id');
 
+        // 1. 요소들이 존재하는지 먼저 확인하는 방어 코드
         const pageTitle = document.getElementById('page-title');
         const submitBtn = document.getElementById('submit-btn');
 
@@ -339,6 +343,7 @@
 
             const data = JSON.parse(localStorage.getItem("editConcertData"));
 
+            // 2. 이제 위에서 맞춘 ID들을 사용합니다.
             document.getElementById('concertTitle').value = data.concertTitle;
             document.getElementById('place').value = data.place;
             document.getElementById('concertDate').value = data.concertDate;
@@ -348,6 +353,7 @@
             document.getElementById('reservationStartAt').value = data.reservationStartAt;
             document.getElementById('reservationEndAt').value = data.reservationEndAt;
 
+            // 이미지 처리
             if(data.image) {
                 document.getElementById('image').value = data.image;
                 document.getElementById('image-preview').src = data.image;
@@ -384,7 +390,7 @@
                     alert("수정 완료!");
                     location.href = "/index.html";
                 } else {
-                    alert("수정 실패");
+                    alert("수정 실패...");
                 }
             });
     }
