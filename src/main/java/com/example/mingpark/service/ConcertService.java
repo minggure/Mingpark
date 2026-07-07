@@ -86,14 +86,12 @@ public class ConcertService {
 
     /**
      * 고유 식별 ID 기반 특정 공연 상세 정보 단일 조회 처리.
+     *
      * @param concertId 조회할 공연의 고유 식별자 (PK)
      * @return 공연 상세 정보가 담긴 Dto 반환
      */
     public ConcertDetailResponseDto getConcertDetail(Long concertId) {
-        Concert concert = concertRepository.findById(concertId)
-                .orElseThrow(() -> new ConcertNotFoundException(concertId));
-
-        return new ConcertDetailResponseDto(concert);
+        return null;
     }
 
     /**
@@ -108,10 +106,10 @@ public class ConcertService {
                 .orElseThrow(() -> new ConcertNotFoundException(concertId));
 
 
-        paymentHistoryRepository.deleteAllByConcertId(concertId); // 1등: 결제 내역 삭제
-        reservationRepository.deleteAllByConcertId(concertId);    // 2등: 예매 내역 삭제
-        seatRepository.deleteAllByConcertId(concertId);           // 3등: 좌석 삭제
-        concertRepository.delete(concert);                          // 마지막에 한번에 부모(공연) 삭제
+        paymentHistoryRepository.deleteAllByConcertId(concertId);
+        reservationRepository.deleteAllByConcertId(concertId);
+        seatRepository.deleteAllByConcertId(concertId);
+        concertRepository.delete(concert);
     }
 
     /**
