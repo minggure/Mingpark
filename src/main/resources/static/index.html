@@ -515,7 +515,14 @@
         document.getElementById('queue-wait-count').innerText = "대기열 등록 중...";
 
         fetch(`/api/concerts/${targetConcertId}/waiting/join`, { method: 'POST', credentials: 'include' })
-            .then(res => res.json())
+            .then(res => {
+                // 대기열 최초 진입 시 세션이 이미 만료되어 있다면 가드 작동
+                if (res.status === 401) {
+                    handle401Error();
+                    throw new Error("세션 만료로 인한 대기열 진입 차단");
+                }
+                return res.json();
+            })
             .then(data => {
                 if (data.status === 'ALLOWED') {
                     // 이미 허가된 유저인 경우 즉시 좌석 선택창으로 워프

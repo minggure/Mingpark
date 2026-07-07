@@ -86,13 +86,11 @@
             font-size: 13px;
         }
 
-        /* 입력창 클릭 시 테두리도 연두색으로! */
         input:focus, textarea:focus {
             border-color: #4CAF50;
             outline: none;
         }
 
-        /* 밍파크 메인 연두색 버튼 */
         .submit-btn {
             width: 100%;
             padding: 12px;
@@ -110,7 +108,6 @@
             background-color: #45a049;
         }
 
-        /* 깔끔한 취소(뒤로가기) 버튼 */
         .cancel-btn {
             width: 100%;
             padding: 12px;
@@ -136,13 +133,13 @@
 </a>
 
 <div class="login-box">
-    <h2 id="page-title">🎤 새 공연 등록</h2>
+    <h2 id="page-title">새 공연 등록</h2>
 
     <div class="input-group">
-        <input type="text" id="concertTitle" placeholder="공연 제목 (예: 2026 아이유 콘서트)" required>
+        <input type="text" id="concertTitle" placeholder="공연 제목 (예: 2026 콘서트)" required>
     </div>
     <div class="input-group">
-        <input type="text" id="place" placeholder="공연 장소 (예: 잠실 주경기장)" required>
+        <input type="text" id="place" placeholder="공연 장소 (예: 올림픽공원)" required>
     </div>
     <div class="input-group">
         <input type="date" id="concertDate" required>
@@ -154,9 +151,7 @@
         <input type="number" id="concertPrice" placeholder="티켓 가격 (숫자만 입력)" required>
     </div>
     <div class="input-group">
-        <!-- 업로드 API가 반환한 이미지 경로를 보관하고 최종 공연 등록 요청에 포함한다. -->
         <input type="hidden" id="image">
-        <!-- 웹에서 이미지 복사 후 이 영역에 Ctrl+V하면 paste 이벤트가 실행된다. -->
         <div id="paste-zone" class="paste-zone" tabindex="0">
             웹에서 포스터를 이미지 복사한 뒤<br>
             여기를 누르고 Ctrl+V로 붙여넣으세요.
@@ -181,6 +176,7 @@
 </div>
 
 <script>
+    // 브라우저 런타임 관리자(ADMIN) 권한 검증 및 강제 차단 가드
     if (localStorage.getItem("loginMemberRole") !== "ADMIN") {
         alert("관리자만 공연을 등록할 수 있습니다.");
         location.href = "/";
@@ -194,7 +190,7 @@
     // 붙여넣기 영역을 누르면 바로 Ctrl+V를 사용할 수 있도록 포커스를 준다.
     pasteZone.addEventListener('click', () => pasteZone.focus());
 
-    // 웹에서 "이미지 복사"한 실제 이미지 파일을 클립보드에서 찾아 업로드한다.
+    // 클립보드 내 이미지 데이터 감지 및 붙여넣기(Ctrl+V) 이벤트 리스너
     pasteZone.addEventListener('paste', event => {
         const imageItem = Array.from(event.clipboardData.items)
             .find(item => item.kind === 'file' && item.type.startsWith('image/'));
@@ -207,6 +203,7 @@
         uploadImage(imageItem.getAsFile());
     });
 
+    // 클립보드 파일 자원을 Multipart로 변환하여 이미지 서버로 비동기 업로드하는 함수
     function uploadImage(imageFile) {
         // JSON이 아닌 실제 파일 전송이므로 multipart/form-data용 FormData를 사용한다.
         const formData = new FormData();
@@ -234,16 +231,71 @@
                 uploadStatus.textContent = '이미지 업로드에 실패했습니다. JPG, PNG, GIF, WEBP 이미지를 사용해 주세요.';
             });
     }
-    // 입력값 없을시 오류메시지 발생
+
+    // 신규 공연 정보 백엔드 송출 트랜잭션 및 유효성 검증 함수
     function submitConcert() {
-        // 이미지 업로드가 완료되어 경로를 받은 뒤에만 공연 등록을 허용한다.
+        const concertTitleInput = document.getElementById('concertTitle');
+        const placeInput = document.getElementById('place');
+        const priceInput = document.getElementById('concertPrice')
+        const concertDateInput = document.getElementById('concertDate')
+        const concertTimeInput = document.getElementById('concertTime')
+        const reservationStartAtInput = document.getElementById('reservationStartAt')
+        const reservationEndAtInput = document.getElementById('reservationEndAt')
+
+        if (!concertTitleInput.value.trim()) {
+            alert('공연 제목을 입력해주세요.');
+            concertTitleInput.focus();
+            return;
+        }
+
+        if (!placeInput.value.trim()) {
+            alert('공연 장소를 입력해주세요.');
+            placeInput.focus();
+            return;
+        }
+        if(!concertDateInput.value) {
+            alert('공연 날짜를 입력해주세요.');
+            concertDateInput.focus();
+            return;
+        }
+
+        if(!concertTimeInput.value) {
+            alert('공연 시간을 입력해주세요.');
+            concertTimeInput.focus();
+            return;
+        }
+
+        if(!priceInput.value) {
+            alert('티켓 가격을 입력해주세요.');
+            priceInput.focus();
+            return;
+        }
+
         if (!imageInput.value) {
             alert('공연 포스터 이미지를 복사해 붙여넣어 주세요.');
             pasteZone.focus();
             return;
         }
 
-        // 포스터의 실제 파일 대신 서버가 반환한 /uploads/... 경로를 JSON에 담는다.
+        if(!reservationStartAtInput.value) {
+            alert('예매 시작 일시를 입력해주세요.');
+            reservationStartAtInput.focus();
+            return;
+        }
+
+        if(!reservationEndAtInput.value) {
+            alert('예매 종료 일시를 입력해주세요.');
+            reservationEndAtInput.focus();
+            return;
+        }
+
+        // 예매 시작일 및 종료일 간의 선후 정합성 비교 가드
+        if (reservationStartAtInput.value > reservationEndAtInput.value) {
+            alert('예매 종료 일시는 예매 시작 일시보다 늦어야 합니다.');
+            reservationEndAtInput.focus();
+            return;
+        }
+
         const data = {
             concertTitle: document.getElementById('title').value,
             place: document.getElementById('place').value,
@@ -274,15 +326,7 @@
             });
     }
 
-    window.onload = () => {
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('mode') === 'edit') {
-            const data = JSON.parse(localStorage.getItem("editConcertData"));
-            // input 칸에 value = data.concertTitle 이런 식으로 다 채워넣기
-            // 버튼 텍스트를 "등록하기" -> "수정하기"로 변경
-            // 버튼 onclick을 updateConcert() API 호출 함수로 변경
-        }
-    }
+    // URL 쿼리 파라미터 기반 등록/수정 모드 동적 렌더링 및 생명주기 초기화 함수
     window.onload = () => {
         const params = new URLSearchParams(window.location.search);
         const mode = params.get('mode');
@@ -292,8 +336,9 @@
         const pageTitle = document.getElementById('page-title');
         const submitBtn = document.getElementById('submit-btn');
 
+        // 수정(edit) 모드로 진입 시 로컬 스토리지 원장 데이터를 입력 필드에 자동 매핑
         if (mode === 'edit') {
-            if (pageTitle) pageTitle.innerText = "🎵 공연 수정";
+            if (pageTitle) pageTitle.innerText = "공연 수정";
             if (submitBtn) submitBtn.innerText = "수정하기";
 
             const data = JSON.parse(localStorage.getItem("editConcertData"));
@@ -321,6 +366,7 @@
         }
     };
 
+    // 기존 등록 정보에 대한 RESTful PUT 데이터 수정 전송 함수
     function updateConcert(concertId) {
         const data = {
             concertTitle: document.getElementById('concertTitle').value,
