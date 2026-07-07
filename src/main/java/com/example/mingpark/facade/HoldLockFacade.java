@@ -21,7 +21,8 @@ public class HoldLockFacade {
         String lockKey = "lock:seat:" + seatId;
 
         Boolean acquired = redisTemplate.opsForValue()
-                .setIfAbsent(lockKey, String.valueOf(memberId), 5, TimeUnit.SECONDS);
+              .setIfAbsent(lockKey, String.valueOf(memberId), 5 , TimeUnit.MINUTES);
+
 
         if(Boolean.FALSE.equals(acquired)){
             log.warn("좌석 선점 실패 (이미 점유됨) -  seatId={}, requestUser={}", seatId, memberId);
@@ -40,5 +41,6 @@ public class HoldLockFacade {
         log.info("좌석 임시 점유 해제 - seatId={}", seatId);
         redisTemplate.delete(lockKey);
     }
+
     }
 

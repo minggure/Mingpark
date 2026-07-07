@@ -191,8 +191,10 @@
     const imagePreview = document.getElementById('image-preview');
     const uploadStatus = document.getElementById('upload-status');
 
+    // 붙여넣기 영역을 누르면 바로 Ctrl+V를 사용할 수 있도록 포커스를 준다.
     pasteZone.addEventListener('click', () => pasteZone.focus());
 
+    // 웹에서 "이미지 복사"한 실제 이미지 파일을 클립보드에서 찾아 업로드한다.
     pasteZone.addEventListener('paste', event => {
         const imageItem = Array.from(event.clipboardData.items)
             .find(item => item.kind === 'file' && item.type.startsWith('image/'));
@@ -206,6 +208,7 @@
     });
 
     function uploadImage(imageFile) {
+        // JSON이 아닌 실제 파일 전송이므로 multipart/form-data용 FormData를 사용한다.
         const formData = new FormData();
         formData.append('image', imageFile);
         uploadStatus.textContent = '이미지를 업로드하는 중입니다...';
@@ -219,6 +222,7 @@
                 return response.json();
             })
             .then(result => {
+                // 업로드된 파일 경로를 저장해 미리보기와 최종 공연 등록 요청에서 재사용한다.
                 imageInput.value = result.imageUrl;
                 imagePreview.src = result.imageUrl;
                 imagePreview.style.display = 'block';
@@ -232,78 +236,24 @@
     }
     // 입력값 없을시 오류메시지 발생
     function submitConcert() {
-        const concertTitleInput = document.getElementById('concertTitle');
-        const placeInput = document.getElementById('place');
-        const priceInput = document.getElementById('concertPrice')
-        const concertDateInput = document.getElementById('concertDate')
-        const concertTimeInput =document.getElementById('concertTime')
-        const reservationStartAtInput =document.getElementById('reservationStartAt')
-        const reservationEndAtInput =document.getElementById('reservationEndAt')
-
-        if (!concertTitleInput.value.trim()) {
-            alert('공연 제목을 입력해주세요.');
-            concertTitleInput.focus();
-            return;
-        }
-
-        if (!placeInput.value.trim()) {
-            alert('공연 장소를 입력해주세요.');
-            placeInput.focus();
-            return;
-        }
-        if(!concertDateInput.value) {
-            alert('공연 날짜를 입력해주세요.');
-            concertDateInput.focus();
-            return;
-        }
-
-        if(!concertTimeInput.value) {
-            alert('공연 시간을 입력해주세요.');
-            concertTimeInput.focus();
-            return;
-        }
-
-        if(!priceInput.value) {
-            alert('티켓 가격을 입력해주세요.');
-            priceInput.focus();
-            return;
-        }
-
+        // 이미지 업로드가 완료되어 경로를 받은 뒤에만 공연 등록을 허용한다.
         if (!imageInput.value) {
             alert('공연 포스터 이미지를 복사해 붙여넣어 주세요.');
             pasteZone.focus();
             return;
         }
 
-        if(!reservationStartAtInput.value) {
-            alert('예매 시작 일시를 입력해주세요.');
-            reservationStartAtInput.focus();
-            return;
-        }
-
-        if(!reservationEndAtInput.value) {
-            alert('예매 종료 일시를 입력해주세요.');
-            reservationEndAtInput.focus();
-            return;
-        }
-
-        if (reservationStartAtInput.value > reservationEndAtInput.value) {
-            alert('예매 종료 일시는 예매 시작 일시보다 늦어야 합니다.');
-            reservationEndAtInput.focus();
-            return;
-        }
-
-        // 수정한 입력 필드의 정확한 매핑 ID 배열 바인딩 처리
+        // 포스터의 실제 파일 대신 서버가 반환한 /uploads/... 경로를 JSON에 담는다.
         const data = {
-            concertTitle: concertTitleInput.value.trim(),
-            place: placeInput.value.trim(),
-            concertDate: concertDateInput.value,
-            concertTime: concertTimeInput.value + ":00",
-            concertPrice: priceInput.value,
+            concertTitle: document.getElementById('title').value,
+            place: document.getElementById('place').value,
+            concertDate: document.getElementById('date').value,
+            concertTime: document.getElementById('time').value + ":00",
+            concertPrice: document.getElementById('price').value,
             image: imageInput.value,
             description: document.getElementById('description').value,
-            reservationStartAt: reservationStartAtInput.value,
-            reservationEndAt: reservationEndAtInput.value
+            reservationStartAt: document.getElementById('reservationStartAt').value,
+            reservationEndAt: document.getElementById('reservationEndAt').value
         };
 
         fetch('/api/concerts', {
@@ -324,12 +274,21 @@
             });
     }
 
-    // 중복되던 window.onload 구문을 단일 실행 스코프로 병합 처리함
+    window.onload = () => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('mode') === 'edit') {
+            const data = JSON.parse(localStorage.getItem("editConcertData"));
+            // input 칸에 value = data.concertTitle 이런 식으로 다 채워넣기
+            // 버튼 텍스트를 "등록하기" -> "수정하기"로 변경
+            // 버튼 onclick을 updateConcert() API 호출 함수로 변경
+        }
+    }
     window.onload = () => {
         const params = new URLSearchParams(window.location.search);
         const mode = params.get('mode');
         const concertId = params.get('id');
 
+        // 1. 요소들이 존재하는지 먼저 확인하는 방어 코드
         const pageTitle = document.getElementById('page-title');
         const submitBtn = document.getElementById('submit-btn');
 
@@ -339,6 +298,7 @@
 
             const data = JSON.parse(localStorage.getItem("editConcertData"));
 
+            // 2. 이제 위에서 맞춘 ID들을 사용합니다.
             document.getElementById('concertTitle').value = data.concertTitle;
             document.getElementById('place').value = data.place;
             document.getElementById('concertDate').value = data.concertDate;
@@ -348,6 +308,7 @@
             document.getElementById('reservationStartAt').value = data.reservationStartAt;
             document.getElementById('reservationEndAt').value = data.reservationEndAt;
 
+            // 이미지 처리
             if(data.image) {
                 document.getElementById('image').value = data.image;
                 document.getElementById('image-preview').src = data.image;
@@ -383,7 +344,7 @@
                     alert("수정 완료!");
                     location.href = "/index.html";
                 } else {
-                    alert("수정 실패");
+                    alert("수정 실패...");
                 }
             });
     }

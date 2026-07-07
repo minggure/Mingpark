@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="/css/style.css">
     <script src="/js/mypage.js" defer></script>
     <style>
-        /* 💡 점 3개(케밥 메뉴)를 위한 추가 CSS */
+
         .concert-card { position: relative; } /* 메뉴 위치 기준점 */
         .kebab-menu { position: absolute; top: 10px; right: 10px; z-index: 10; }
         .kebab-btn {
@@ -27,7 +27,7 @@
         }
         .kebab-dropdown button:hover { background: #f8d7da; }
 
-        /* 대기열 전용 심플 스타일링 추가 */
+    <style>
         .waiting-box {
             text-align: center;
             padding: 30px;
@@ -44,13 +44,6 @@
             color: #ff4757;
             font-weight: bold;
             margin: 10px 0;
-        }
-        .signup-condition {
-            display: block;
-            margin-top: 6px;
-            color: #777;
-            font-size: 12px;
-            line-height: 1.4;
         }
     </style>
 </head>
@@ -720,7 +713,9 @@
         if (res.ok && result.status === "success") {
             alert(result.message || "결제가 완료되었습니다.");
         } else {
-            alert(result.message || "결제에 실패했습니다.");
+            alert(result.message || "결제에 실패했습니다. (시간 초과)");
+            closeModal('payment-modal');
+            loadSeats();
         }
     }
 
