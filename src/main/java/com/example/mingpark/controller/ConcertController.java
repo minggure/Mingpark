@@ -28,9 +28,11 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ConcertController {
     private final ConcertService concertService;
+
     /**
      * [POST] 관리자 화면에서 입력한 새로운 공연 정보를 시스템에 등록 처리.
-     * @param request 등록할 공연 제목, 장소, 시간, 티켓 가격, 포스터 이미지 경로 등이 담긴 DTO
+     *
+     * @param request     등록할 공연 제목, 장소, 시간, 티켓 가격, 포스터 이미지 경로 등이 담긴 DTO
      * @param userDetails 인증된 사용자 정보 및 권한 객체
      * @return 200 OK 응답 및 안내 문자열 반환, 권한 미달 시 403 Forbidden 반환
      */
@@ -70,38 +72,15 @@ public class ConcertController {
      */
     @GetMapping("/api/concerts/{concertId}")
     public ConcertDetailResponseDto getConcertDetailApi(@PathVariable Long concertId) {
+
         return concertService.getConcertDetail(concertId);
+
     }
-
-    /**
-     * [DELETE] 특정 공연 삭제 (관리자 전용)
-     */
-    @DeleteMapping("/api/concerts/{concertId}")
-    public ResponseEntity<String> deleteConcert(
-            @PathVariable Long concertId,
-            @AuthenticationPrincipal CustomUserDetails userDetails
-    ) {
-        // 1. 관리자 권한 확인
-        if (userDetails == null || userDetails.getRole() != MemberRole.ADMIN) {
-            return ResponseEntity.status(403).body("관리자만 공연을 삭제할 수 있습니다.");
-        }
-        // 2. 서비스로 삭제 요청
-        concertService.deleteConcert(concertId);
-
-        return ResponseEntity.ok("공연이 성공적으로 삭제되었습니다.");
-    }
-
-    @PutMapping("/api/concerts/{concertId}")
-    public ResponseEntity<String> updateConcert(
-            @PathVariable Long concertId,
-            @RequestBody ConcertCreatRequestDto request,
-            @AuthenticationPrincipal CustomUserDetails userDetails
-    ) {
-        if (userDetails == null || userDetails.getRole() != MemberRole.ADMIN) {
-            return ResponseEntity.status(403).body("관리자만 수정 가능합니다.");
-        }
-        concertService.updateConcert(concertId, request);
-        return ResponseEntity.ok("공연 정보가 수정되었습니다.");
-    }
-
 }
+//    @DeleteMapping("/api/concerts/{concertId}")
+//    public ResponseEntity<String> deleteConcert(@PathVariable Long concertId){
+//
+//        try{
+//            concertService.delete(concertId);
+//        }
+
