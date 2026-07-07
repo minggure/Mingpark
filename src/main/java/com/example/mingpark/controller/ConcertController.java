@@ -72,7 +72,9 @@ public class ConcertController {
      */
     @GetMapping("/api/concerts/{concertId}")
     public ConcertDetailResponseDto getConcertDetailApi(@PathVariable Long concertId) {
+
         return concertService.getConcertDetail(concertId);
+
     }
 }
 //    @DeleteMapping("/api/concerts/{concertId}")

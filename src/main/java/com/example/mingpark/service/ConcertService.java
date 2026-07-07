@@ -91,7 +91,10 @@ public class ConcertService {
      * @return 공연 상세 정보가 담긴 Dto 반환
      */
     public ConcertDetailResponseDto getConcertDetail(Long concertId) {
-        return null;
+        Concert concert = concertRepository.findById(concertId)
+                .orElseThrow(() -> new ConcertNotFoundException(concertId));
+
+        return new ConcertDetailResponseDto(concert);
     }
 
     /**
