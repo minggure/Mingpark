@@ -105,7 +105,9 @@ Redis ZSET(`queue:wait:concert:{id}`)로 대기 순번을 관리하고, 스케�
 
 <br>
 
-## 6. 부하 테스트
+## 6. 부하 테스트 (스파이크 테스트)
+
+> 엄밀히는 트래픽을 점진적으로 늘리는 일반적인 부하 테스트(load test)가 아니라, `constant-vus`로 처음부터 300명이 동시에 몰리는 **스파이크 테스트(spike test)**에 가깝습니다. 티켓 오픈 순간의 트래픽 폭주를 재현하고, 그 상황에서 좌석 선점 락이 올바르게 동작하는지 보는 동시성 테스트 성격도 겸합니다.
 
 - `src/test/java/load-test.js` — k6 스크립트 (로그인 후 좌석 예매 시나리오)
 - `src/test/java/k6-direct-hold-test.js` — Before 시나리오 (대기열 게이트 없이 곧바로 `hold` 시도)
@@ -187,7 +189,7 @@ Before는 시간이 지날수록 응답시간이 계속 우상향합니다(34 �
 | :---: | :---: | :---: |
 | <img src="https://avatars.githubusercontent.com/u/204975717?v=4" width="130" height="130" style="border-radius: 50%;"/><br>[@전민규(조장)](https://github.com/minggure) | <img src="https://avatars.githubusercontent.com/u/52120957?v=4" width="130" height="130" style="border-radius: 50%;"/><br>[@윤태형](https://github.com/YunTaeng) | <img src="https://avatars.githubusercontent.com/u/156043679?v=4" width="130" height="130" style="border-radius: 50%;"/><br>[@김현정](https://github.com/anthia-kim) |
 | **Backend Lead** | **Backend / Infra** | **Backend / QA** |
-| - 초기 도메인 엔터티 및 DB 구조 설계<br>- 공연 등록/수정/삭제 API 구현<br>- 좌석 임시 점유 및 시간초과 자동 실패 처리 | - 세션 기반 로그인 핵심 로직 구현<br>- Redis 분산 락 기반 좌석 선점 및 대기열 시스템 구현<br>- 대기열 게이트 연동 및 k6 부하 테스트 비교 | - 회원가입 검증/암호화 및 카카오 로그인 연동<br>- Spring Security 세션 인증 구조 적용<br>- 예매 내역 조회 및 포인트 결제 흐름 구현 |
+| - 초기 도메인 엔터티 및 DB 구조 설계<br>- 공연 등록/수정/삭제 API 구현<br>- 좌석 임시 점유 및 시간초과 자동 실패 처리 | - 세션 기반 로그인 핵심 로직 구현<br>- Redis 분산 락 기반 좌석 선점 및 대기열 시스템 구현<br>- 대기열 게이트 연동 및 k6 스파이크 테스트 비교 | - 회원가입 검증/암호화 및 카카오 로그인 연동<br>- Spring Security 세션 인증 구조 적용<br>- 예매 내역 조회 및 포인트 결제 흐름 구현 |
 
 ### 개인 기여
 
@@ -200,7 +202,7 @@ Before는 시간이 지날수록 응답시간이 계속 우상향합니다(34 �
 **윤태형**
 - 세션 기반 로그인 핵심 비즈니스 로직/DTO 및 로그인 화면(`login.html`) 구현, 해시 비밀번호 비교 적용
 - `concertId`/`seatId` 기반 Redis 분산 락 좌석 임시 선점 기능 통합·고도화, 만료 락 자동 회수 스케줄러 도입
-- Redis Sorted Set 기반 대기열 시스템 설계·구현(Step 2 핵심 구현자), 대기열 인증 우회·좌석 예약 동시성 검증 취약점 수정, 대기열 게이트 연동 및 k6 부하 테스트 전/후 비교(6번 항목)
+- Redis Sorted Set 기반 대기열 시스템 설계·구현(Step 2 핵심 구현자), 대기열 인증 우회·좌석 예약 동시성 검증 취약점 수정, 대기열 게이트 연동 및 k6 스파이크 테스트 전/후 비교(6번 항목)
 - `PaymentHistory` 엔티티 설계, 마이페이지 보유 포인트 조회 API 구현, `main.html` 중심 SPA 구조 전환
 
 **김현정**
