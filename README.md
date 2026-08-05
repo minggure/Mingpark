@@ -130,6 +130,8 @@ k6 run src/test/java/load-test.js
 // Before: 로그인만 하면 대기열과 무관하게 바로 선점 시도
 holdLockFacade.holdSeat(seatId, memberId);
 
+//----------------------------------------------------
+
 // After: 대기열을 통과(ALLOWED)한 사용자만 선점 가능
 if (!waitingService.isAllowed(concertId, memberId)) {
     return ResponseEntity.status(FORBIDDEN).body(...);
@@ -179,7 +181,7 @@ Before는 시간이 지날수록 응답시간이 계속 우상향합니다(34 �
 
 ## 7. Team Members (99즈)
 
-저희는 **99즈** 팀입니다. 대용량 트래픽 챌린지를 해결하기 위해 다음과 같이 역할을 나누어 협업했습니다.
+저희는 **99즈** 팀입니다. 이번 프로젝트에서 다음과 같이 역할을 나누어 협업했습니다.
 
 | 전민규 | 윤태형 | 김현정 |
 | :---: | :---: | :---: |
@@ -188,8 +190,6 @@ Before는 시간이 지날수록 응답시간이 계속 우상향합니다(34 �
 | - 초기 도메인 엔터티 및 DB 구조 설계<br>- 공연 등록/수정/삭제 API 구현<br>- 좌석 임시 점유 및 시간초과 자동 실패 처리 | - 세션 기반 로그인 핵심 로직 구현<br>- Redis 분산 락 기반 좌석 선점 및 대기열 시스템 구현<br>- 대기열 게이트 연동 및 k6 부하 테스트 비교 | - 회원가입 검증/암호화 및 카카오 로그인 연동<br>- Spring Security 세션 인증 구조 적용<br>- 예매 내역 조회 및 포인트 결제 흐름 구현 |
 
 ### 개인 기여
-
-커밋 이력(`git log --author`) 기준으로 각자 실제 작업한 내용만 정리했습니다.
 
 **전민규**
 - 초기 프로젝트 폴더 구조 및 DB 연결, Member/Concert/Reservation 엔터티·리포지토리 설계
