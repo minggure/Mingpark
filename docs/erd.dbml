@@ -1,0 +1,114 @@
+// 밍파크 ERD - dbdiagram.io에 붙여넣어서 사용
+// https://dbdiagram.io/d 에서 새 다이어그램 만들고 이 내용을 그대로 붙여넣으면 됩니다.
+
+Enum member_role {
+  USER
+  ADMIN
+}
+
+Enum concert_status {
+  UPCOMING
+  ON_SALE
+  CLOSED
+  ENDED
+  INACTIVE
+}
+
+Enum seat_status {
+  AVAILABLE
+  HOLD
+  RESERVED
+}
+
+Enum reservation_status {
+  PENDING
+  RESERVED
+  CANCELLED
+}
+
+Enum payment_status {
+  SUCCESS
+  FAILED
+}
+
+Enum payment_type {
+  PAYMENT
+  REFUND
+}
+
+Table members {
+  member_id bigint [pk, increment]
+  name varchar(20) [not null]
+  login_id varchar(50) [not null, unique]
+  password varchar [not null, note: 'BCrypt 해시']
+  point int [not null, default: 1000000]
+  email varchar(100) [not null]
+  role member_role [not null]
+
+  note: '회원 기본 프로필, 로그인 계정, 예매 포인트, 권한 등급'
+}
+
+Table concerts {
+  concert_id bigint [pk, increment]
+  concert_title varchar [not null]
+  image varchar [not null, note: '포스터 이미지 경로']
+  concert_time time [not null]
+  concert_date date [not null]
+  concert_price int [not null]
+  description varchar(2000)
+  place varchar
+  reservation_start_at datetime [note: '예매 시작 일시']
+  reservation_end_at datetime [note: '예매 종료 일시']
+  status concert_status [not null, default: 'UPCOMING']
+
+  note: '공연 기본 정보, 예매 가능 기간, 진행 상태'
+}
+
+Table seats {
+  seat_id bigint [pk, increment]
+  concert_id bigint [not null]
+  seat_number int [not null]
+  status seat_status [not null, default: 'AVAILABLE']
+
+  indexes {
+    (concert_id, seat_number) [unique, name: 'uk_seats_concert_seat_number']
+  }
+
+  note: '공연별 개별 좌석. status는 DB 상태이며 Redis 임시 선점(락)과는 별개'
+}
+
+Table reservation {
+  reservation_id bigint [pk, increment]
+  member_id bigint [not null]
+  concert_id bigint [not null]
+  seat_id bigint [not null]
+  status reservation_status [not null]
+  total_price int [not null]
+  hold_expired_at datetime [note: '좌석 임시 선점 만료 시각']
+  reserved_at datetime
+  confirmed_at datetime [note: '결제 완료 시각']
+  cancelled_at datetime [note: '취소/환불 시각']
+  created_at datetime [not null]
+  updated_at datetime [not null]
+
+  note: '회원별 공연·좌석 예매 상태 및 결제 금액'
+}
+
+Table payment_history {
+  payment_history_id bigint [pk, increment]
+  member_id bigint [not null]
+  reservation_id bigint [not null]
+  amount int [not null]
+  type payment_type [not null, note: 'PAYMENT(차감) / REFUND(복구)']
+  status payment_status [not null]
+  created_at datetime [not null]
+
+  note: '포인트 결제/환불 이력'
+}
+
+Ref: seats.concert_id > concerts.concert_id
+Ref: reservation.member_id > members.member_id
+Ref: reservation.concert_id > concerts.concert_id
+Ref: reservation.seat_id > seats.seat_id
+Ref: payment_history.member_id > members.member_id
+Ref: payment_history.reservation_id > reservation.reservation_id
