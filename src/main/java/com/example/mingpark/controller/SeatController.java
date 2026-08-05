@@ -5,6 +5,7 @@ import com.example.mingpark.facade.HoldLockFacade;
 import com.example.mingpark.security.CustomUserDetails;
 import com.example.mingpark.service.SeatReservationService;
 import com.example.mingpark.service.SeatService;
+import com.example.mingpark.service.WaitingService;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ public class SeatController {
     private final SeatService seatService;
     private final SeatReservationService seatReservationService;
     private final HoldLockFacade holdLockFacade;
+    private final WaitingService waitingService;
     /**
      * GET /api/concerts/{concertId}/seats
      * 특정 공연의 전체 좌석 현황 조회
@@ -67,6 +69,13 @@ public class SeatController {
 
         Long memberId = userDetails.getMemberId();
         log.info("[SeatController] 좌석 선점 요청 concertId={}, seatId={}, memberId={}", concertId, seatId, memberId);
+
+        if (!waitingService.isAllowed(concertId, memberId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "status", "failed",
+                    "message", "대기열을 통과한 사용자만 좌석을 선점할 수 있습니다. 대기열에 먼저 참여해 주세요."
+            ));
+        }
 
         try {
             // 분산 락 및 DB HOLD 선점 처리를 원자적으로 일괄 처리

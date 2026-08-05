@@ -100,6 +100,19 @@ public class WaitingService {
     }
 
     /**
+     * 특정 회원이 대기열을 통과하여 현재 활성(ALLOWED) 상태인지 확인.
+     * 좌석 선점 등 실제 예매 흐름 진입 전 관문(gate)으로 사용한다.
+     *
+     * @param concertId 공연 고유 식별 ID
+     * @param memberId 회원의 고유 ID
+     * @return 활성 큐에 속해 있으면 true
+     */
+    public boolean isAllowed(Long concertId, Long memberId) {
+        String activeKey = ACTIVE_KEY_PREFIX + concertId;
+        return Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(activeKey, String.valueOf(memberId)));
+    }
+
+    /**
      * 특정 회원의 대기열 및 활성 큐 점유 데이터 강제 삭제.
      *
      * @param concertId 공연 고유 식별 ID
