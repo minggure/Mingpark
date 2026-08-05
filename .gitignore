@@ -47,3 +47,7 @@ vendor/
 node_modules/
 dist/
 *.generated.py
+
+### Claude Code (로컬 전용 설정) ###
+/.claude/
+/CLAUDE.md
