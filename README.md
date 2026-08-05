@@ -97,22 +97,21 @@ Kafka 기반 비동기 발급/결제 요청 처리 — 아직 구현되지 않�
 <br>
 
 ## 6. 부하 테스트
-
-- `src/test/java/load-test.js` — k6 스크립트 (로그인 후 좌석 예매 시나리오)
-- `src/test/test.http` — 좌석 조회 API 수동 테스트
-
-```bash
-k6 run src/test/java/load-test.js
-```
+K6를 사용하여 동일한 시나리오로 대기열(Redis) 적용 전후를 테스트. 
+로컬 PC 1대, 공연 1개·좌석 50석, 계정 풀
+시나리오 : 300개 로그인 후 좌석 선점(hold) 후 예매 시도.
 
 ### 📊 대기열 게이트 적용 전/후 비교
 
-대기열(`Step 2`)을 실제 좌석 선점 진입 관문으로 연결하기 전에는, 대기열 API(`/waiting/*`)와 좌석 선점 API(`/seats/{id}/hold`)가 서로 독립적으로 동작해 로그인만 하면 대기열을 거치지 않고도 바로 좌석 선점을 시도할 수 있었습니다. `SeatController.holdSeat`에 `WaitingService.isAllowed()` 검사를 추가해, **대기열을 통과(ALLOWED)한 사용자만 좌석을 선점할 수 있도록** 실제로 흐름을 연결한 뒤 동일한 조건(로컬 PC 1대, 공연 1개·좌석 50석, 계정 풀 300개)에서 k6로 전/후를 비교했습니다.
+전 : 로그인만 하면 바로 좌석 선택 가능!!
+
+후 : 대기열 API(`/waiting/*`)와 좌석 선점 API(`/seats/{id}/hold`)을 연결 (`SeatController.holdSeat`에 `WaitingService.isAllowed()` 검사)
+**대기열을 통과(ALLOWED)한 사용자만 좌석을 선점할 수 있도록** 설정
 
 | 시나리오 | VUs / 시간 | 실행 스크립트 |
 | --- | --- | :---: |
 | **Before** — 게이트 없이 로그인 후 곧바로 `hold`+`reservation` 직접 호출 | 300 VU / 30s | `src/test/java/k6-direct-hold-test.js` |
-| **After** — `waiting/join` → 상태 폴링 → `ALLOWED` 후에만 `hold`+`reservation` 호출 | 300 VU / 30s | `src/test/java/k6-waiting-test.js` |
+| **After** — 대기열 `waiting/join` → 상태 폴링 → `ALLOWED` 후에만 `hold`+`reservation` 호출 | 300 VU / 30s | `src/test/java/k6-waiting-test.js` |
 
 | 지표 | Before (게이트 없음) | After (대기열 게이트) | 비고 |
 | --- | ---: | ---: | --- |
