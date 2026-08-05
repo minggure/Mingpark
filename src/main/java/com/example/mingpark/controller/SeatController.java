@@ -90,21 +90,5 @@ public class SeatController {
             ));
         }
     }
-    /**
-     * DELETE /api/concerts/{concertId}/seats/{seatId}/hold
-     * 임시 선점 수동 해제
-     * 유저가 선택했던  좌석을 수동으로 취소하거나 창을 닫을 때 선점 해제 처리
-     * Redis 장부에서 키를 강제 회수하고 DB 상태를 AVAILABLE로 롤백
-     */
-//    @DeleteMapping("/{concertId}/seats/{seatId}/hold")
-//    public ResponseEntity<String> releaseSeatHold(
-//            @PathVariable Long concertId,
-//            @PathVariable Long seatId) {
-//
-//        // 퍼사드를 통해 Redis 락(자물쇠) 즉시 파괴
-//        holdLockFacade.releaseHold(seatId);
-//
-//        return ResponseEntity.ok("좌석 임시 점유가 성공적으로 해제되었습니다.");
-//    }
 }
 

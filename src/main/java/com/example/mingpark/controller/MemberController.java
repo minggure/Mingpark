@@ -75,28 +75,6 @@ public class MemberController {
     }
 
 
-//    @PostMapping("/members/login")
-//    public ResponseEntity<?> login(@RequestBody LoginRequestDto loginDto, HttpServletRequest request) {
-//
-//        Member loginMember = memberService.login(loginDto);
-//
-//        // 로그인 실패 시
-//        if (loginMember == null) {
-//            return ResponseEntity.badRequest().body(Map.of("status", "failed"));
-//        }
-
-//        // 로그인 성공 시 세션 저장
-//        HttpSession session = request.getSession();
-//        session.setAttribute("loginMember", loginMember);
-//
-//        return ResponseEntity.ok(Map.of(
-//                "status", "success",
-//                "memberName", loginMember.getName(),
-//                "role", loginMember.getRole().name()
-//                // 로그인 성공 응답에 role 추가
-//        ));
-//    }
-
     /**
      * 입력받은 아이디와 비밀번호를 AuthenticationManager를 통해 검증하고,
      * 인증 성공 시 시큐리티 컨텍스트 및 서블릿 세션에 저장 처리.
