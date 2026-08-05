@@ -173,27 +173,29 @@ holdLockFacade.holdSeat(seatId, memberId);
 | :---: | :---: | :---: |
 | <img src="https://avatars.githubusercontent.com/u/204975717?v=4" width="130" height="130" style="border-radius: 50%;"/><br>[@전민규(조장)](https://github.com/minggure) | <img src="https://avatars.githubusercontent.com/u/52120957?v=4" width="130" height="130" style="border-radius: 50%;"/><br>[@윤태형](https://github.com/YunTaeng) | <img src="https://avatars.githubusercontent.com/u/156043679?v=4" width="130" height="130" style="border-radius: 50%;"/><br>[@김현정](https://github.com/anthia-kim) |
 | **Backend Lead** | **Backend / Infra** | **Backend / QA** |
-| - 프로젝트 총괄 및 도메인 설계<br>- Redis 기반 티켓팅 대기열 구현<br>- DB 성능 최적화 및 락 제어 | - 세션 기반 로그인/카카오 인증 구현<br>- Redis 분산 락 기반 좌석 임시 선점 및 대기열 시스템 구현<br>- 대기열 게이트 연동 및 k6 부하 테스트 전/후 비교 | - 핵심 도메인 비즈니스 로직 구현<br>- Locust/k6 기반 부하 테스트 시나리오 작성<br>- 병목 구간 분석 및 튜닝 |
+| - 초기 도메인(Member/Concert/Reservation) 및 DB 구조 설계<br>- 공연 등록/수정/삭제 API 구현<br>- 좌석 임시 점유 API 설계 및 시간초과 자동 실패 처리 | - 세션 기반 로그인 핵심 로직 구현<br>- Redis 분산 락 기반 좌석 임시 선점 및 대기열 시스템 구현<br>- 대기열 게이트 연동 및 k6 부하 테스트 전/후 비교 | - 회원가입 검증/암호화 및 카카오 소셜 로그인 연동<br>- Spring Security 세션 인증 구조 적용<br>- 예매 내역 조회 및 포인트 결제 흐름 구현 |
 
 ### 개인 기여
 
+커밋 이력(`git log --author`) 기준으로 각자 실제 작업한 내용만 정리했습니다.
+
 **전민규**
-- DB 연결/엔터티(Member, Concert, Seat, Reservation)·리포지토리 기본 구조 설계
-- 공연 등록/수정/삭제 API 및 프론트엔드, 페이징 목록 조회 기능 구현
-- 좌석 임시 점유 시간 초과 시 자동 실패 처리 및 Redis TTL 기반 동시성 제어 적용
-- 결제 페이지 및 결제 흐름(창) 구현
+- 초기 프로젝트 폴더 구조 및 DB 연결, Member/Concert/Reservation 엔터티·리포지토리 설계
+- 공연 등록/수정/삭제 API 및 프론트엔드(`register.html`), 페이징 목록 조회 기능 구현
+- 좌석 임시 점유 API 설계, 시간초과 시 자동 실패 처리 및 사용자 수동 취소 API 구현, Redis TTL 기반 동시성 제어 적용
+- 결제 페이지(결제 창) 프론트엔드 구현, Redis 환경설정 및 초기 테스트 컨트롤러 세팅
 
 **윤태형**
-- 세션 기반 로그인/카카오 인증 구현, Redis 분산 락 기반 좌석 임시 선점 기능 구현 및 고도화
-- Redis Sorted Set 기반 대기열 시스템 설계 및 구현 (Step 2 핵심 구현자)
-- 대기열 인증 우회·좌석 예약 동시성 검증 취약점 발견 및 수정, 대기열 게이트 연동 및 k6 부하 테스트 전/후 비교(6번 항목)
-- 마이페이지/포인트 결제 이력 API 구현, `main.html` 중심 SPA 구조 전환
+- 세션 기반 로그인 핵심 비즈니스 로직/DTO 및 로그인 화면(`login.html`) 구현, 해시 비밀번호 비교 적용
+- `concertId`/`seatId` 기반 Redis 분산 락 좌석 임시 선점 기능 통합·고도화, 만료 락 자동 회수 스케줄러 도입
+- Redis Sorted Set 기반 대기열 시스템 설계·구현(Step 2 핵심 구현자), 대기열 인증 우회·좌석 예약 동시성 검증 취약점 수정, 대기열 게이트 연동 및 k6 부하 테스트 전/후 비교(6번 항목)
+- `PaymentHistory` 엔티티 설계, 마이페이지 보유 포인트 조회 API 구현, `main.html` 중심 SPA 구조 전환
 
 **김현정**
-- 회원가입/카카오 소셜 로그인 UI 및 검증 로직, 비밀번호 암호화 적용
-- Spring Security 세션 인증 구조로 리팩터링, 관리자 권한 기반 공연 등록 제한
-- 공연 상세 페이지, 예매 내역 목록/상세 조회, 포인트 결제 및 예매 생성 흐름 구현
-- Locust/k6 부하 테스트 시나리오 작성 및 병목 구간 분석
+- 회원가입 기능 및 검증, 비밀번호 암호화 적용, 카카오 소셜 로그인(`KakaoService`) 연동
+- `SecurityConfig` 기반 Spring Security 세션 인증 구조로 리팩터링, 관리자 권한 기반 공연 등록 제한 추가
+- 공연 상세 페이지, 마이페이지 내 예매 내역 목록/상세 조회, 포인트 결제 및 예매 생성 흐름(`PaymentSucceededEvent`/`PaymentFailedEvent`) 구현
+- 회원/결제 관련 리포지토리·서비스 테스트 코드 작성, Locust/k6 기반 부하 테스트 시나리오 작성
 
 <br>
 
