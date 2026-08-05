@@ -2,11 +2,45 @@
 
 > **🎫 대규모 트래픽을 고려한 티켓팅 및 선착순 시스템 프로젝트**
 
+## 1. 프로젝트 소개
+
 인터파크 티켓 서비스를 벤치마킹하여, 대규모 트래픽 환경에서 발생할 수 있는 **동시성 문제**와 **서버 다운(Bottleneck)** 현상을 단계별로 해결해 나가는 백엔드 중심 챌린지 프로젝트입니다.
 
 <br>
 
-## 1. Technology Stack
+## 2. 팀원 소개 (99즈)
+
+저희는 **99즈** 팀입니다. 이번 프로젝트에서 다음과 같이 역할을 나누어 협업했습니다.
+
+| 전민규 | 윤태형 | 김현정 |
+| :---: | :---: | :---: |
+| <img src="https://avatars.githubusercontent.com/u/204975717?v=4" width="130" height="130" style="border-radius: 50%;"/><br>[@전민규(조장)](https://github.com/minggure) | <img src="https://avatars.githubusercontent.com/u/52120957?v=4" width="130" height="130" style="border-radius: 50%;"/><br>[@윤태형](https://github.com/YunTaeng) | <img src="https://avatars.githubusercontent.com/u/156043679?v=4" width="130" height="130" style="border-radius: 50%;"/><br>[@김현정](https://github.com/anthia-kim) |
+| **Backend Lead** | **Backend / Infra** | **Backend / QA** |
+| - 초기 도메인 엔터티 및 DB 구조 설계<br>- 공연 등록/수정/삭제 API 구현<br>- 좌석 임시 점유 및 시간초과 자동 실패 처리 | - 세션 기반 로그인 핵심 로직 구현<br>- Redis 분산 락 기반 좌석 선점 및 대기열 시스템 구현<br>- 대기열 게이트 연동 및 k6 스파이크 테스트 비교 | - 회원가입 검증/암호화 및 카카오 로그인 연동<br>- Spring Security 세션 인증 구조 적용<br>- 예매 내역 조회 및 포인트 결제 흐름 구현 |
+
+### 개인 기여
+
+**전민규**
+- 초기 프로젝트 폴더 구조 및 DB 연결, Member/Concert/Reservation 엔터티·리포지토리 설계
+- 공연 등록/수정/삭제 API 및 프론트엔드(`register.html`), 페이징 목록 조회 기능 구현
+- 좌석 임시 점유 API 설계, 시간초과 시 자동 실패 처리 및 사용자 수동 취소 API 구현, Redis TTL 기반 동시성 제어 적용
+- 결제 페이지(결제 창) 프론트엔드 구현, Redis 환경설정 및 초기 테스트 컨트롤러 세팅
+
+**윤태형**
+- 세션 기반 로그인 핵심 비즈니스 로직/DTO 및 로그인 화면(`login.html`) 구현, 해시 비밀번호 비교 적용
+- `concertId`/`seatId` 기반 Redis 분산 락 좌석 임시 선점 기능 통합·고도화, 만료 락 자동 회수 스케줄러 도입
+- Redis Sorted Set 기반 대기열 시스템 설계·구현(Step 2 핵심 구현자), 대기열 인증 우회·좌석 예약 동시성 검증 취약점 수정, 대기열 게이트 연동 및 k6 스파이크 테스트 전/후 비교(7번 항목)
+- `PaymentHistory` 엔티티 설계, 마이페이지 보유 포인트 조회 API 구현, `main.html` 중심 SPA 구조 전환
+
+**김현정**
+- 회원가입 기능 및 검증, 비밀번호 암호화 적용, 카카오 소셜 로그인(`KakaoService`) 연동
+- `SecurityConfig` 기반 Spring Security 세션 인증 구조로 리팩터링, 관리자 권한 기반 공연 등록 제한 추가
+- 공연 상세 페이지, 마이페이지 내 예매 내역 목록/상세 조회, 포인트 결제 및 예매 생성 흐름(`PaymentSucceededEvent`/`PaymentFailedEvent`) 구현
+- 회원/결제 관련 리포지토리·서비스 테스트 코드 작성, Locust/k6 기반 부하 테스트 시나리오 작성
+
+<br>
+
+## 3. 기술 스택
 
 ![Java](https://img.shields.io/badge/Java%2017-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
@@ -20,45 +54,7 @@
 
 <br>
 
-## 2. Getting Started
-
-> 현재는 로컬 실행을 기준으로 하며, 별도 배포는 진행하지 않았습니다. (추후 배포 예정)
-
-### 사전 준비물
-- JDK 17
-- MySQL 서버
-- Redis 서버 (로컬 기본값: `localhost:6379`)
-
-### 실행 방법
-
-```bash
-# 1. 레포지토리 클론
-git clone <repository-url>
-cd Mingpark
-
-# 2. 로컬 환경 설정 파일 생성 (git에 커밋되지 않음)
-#    src/main/resources/application-local.properties
-#    - 기본값(DB_URL/DB_USERNAME/DB_PASSWORD 미지정 시)은
-#      jdbc:mysql://localhost:3306/mingpark_db, ming/ming 을 사용합니다.
-#    - 필요 시 아래 값을 재정의하세요.
-
-# 3. 애플리케이션 실행 (local 프로필)
-./mvnw spring-boot:run -Dspring-boot.run.profiles=local
-```
-
-기본 프로필(`application.properties`)로 실행할 경우 아래 환경변수가 필요합니다.
-
-| 환경변수 | 설명 | 필수 여부 |
-| --- | --- | :---: |
-| `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | MySQL 접속 정보 | ✅ |
-| `KAKAO_REST_API_KEY`, `KAKAO_CLIENT_SECRET` | 카카오 로그인 연동 키 | 카카오 로그인 사용 시 |
-| `ADMIN_LOGIN_ID`, `ADMIN_PASSWORD`, `ADMIN_EMAIL` | 최초 기동 시 관리자 계정 자동 생성/동기화 | 관리자 기능 사용 시 |
-
-서버 기동 후 `http://localhost:8080` 에서 정적 페이지(`index.html`, `login.html`, `register.html`, `mypage.html`)에 접근할 수 있습니다.
-
-<br>
-
-## 3. Project Structure
+## 4. 시스템 아키텍처
 
 ```
 src/main/java/com/example/mingpark/
@@ -75,7 +71,9 @@ src/main/java/com/example/mingpark/
 └── service/         # 비즈니스 로직
 ```
 
-### 아키텍처 / ERD
+<br>
+
+## 5. ERD
 
 ![ERD](docs/erd.png)
 
@@ -83,7 +81,7 @@ src/main/java/com/example/mingpark/
 
 <br>
 
-## 4. 주요 기능
+## 6. 핵심 기능
 
 | 영역 | 내용 |
 | --- | --- |
@@ -93,9 +91,7 @@ src/main/java/com/example/mingpark/
 | 대기열 | Redis Sorted Set 기반 대기열 진입/상태 조회/이탈, 1초 주기 스케줄러가 활성 인원(`MAX_ACTIVE_CAPACITY`)만큼 순차 입장 허가 |
 | 마이페이지 | 예매 내역 목록/상세 조회, 예매 환불(공연 시작 전에 한해 포인트 복구) |
 
-<br>
-
-## 5. Project Roadmap
+### 구현 로드맵
 
 ### ✅ Step 1. 인터파크 베이스 시스템
 Controller-Service-Repository 구조, 회원/공연/좌석/예매 핵심 도메인 및 CRUD API — 구현 완료
@@ -105,7 +101,7 @@ Redis ZSET(`queue:wait:concert:{id}`)로 대기 순번을 관리하고, 스케�
 
 <br>
 
-## 6. 부하 테스트 (스파이크 테스트)
+## 7. 동시성 제어 - 좌석 예매 (트러블슈팅 & 스파이크 테스트)
 
 > 엄밀히는 트래픽을 점진적으로 늘리는 일반적인 부하 테스트(load test)가 아니라, `constant-vus`로 처음부터 300명이 동시에 몰리는 **스파이크 테스트(spike test)**에 가깝습니다. 티켓 오픈 순간의 트래픽 폭주를 재현하고, 그 상황에서 좌석 선점 락이 올바르게 동작하는지 보는 동시성 테스트 성격도 겸합니다.
 
@@ -181,38 +177,6 @@ Before는 시간이 지날수록 응답시간이 계속 우상향합니다(34 �
 
 <br>
 
-## 7. Team Members (99즈)
-
-저희는 **99즈** 팀입니다. 이번 프로젝트에서 다음과 같이 역할을 나누어 협업했습니다.
-
-| 전민규 | 윤태형 | 김현정 |
-| :---: | :---: | :---: |
-| <img src="https://avatars.githubusercontent.com/u/204975717?v=4" width="130" height="130" style="border-radius: 50%;"/><br>[@전민규(조장)](https://github.com/minggure) | <img src="https://avatars.githubusercontent.com/u/52120957?v=4" width="130" height="130" style="border-radius: 50%;"/><br>[@윤태형](https://github.com/YunTaeng) | <img src="https://avatars.githubusercontent.com/u/156043679?v=4" width="130" height="130" style="border-radius: 50%;"/><br>[@김현정](https://github.com/anthia-kim) |
-| **Backend Lead** | **Backend / Infra** | **Backend / QA** |
-| - 초기 도메인 엔터티 및 DB 구조 설계<br>- 공연 등록/수정/삭제 API 구현<br>- 좌석 임시 점유 및 시간초과 자동 실패 처리 | - 세션 기반 로그인 핵심 로직 구현<br>- Redis 분산 락 기반 좌석 선점 및 대기열 시스템 구현<br>- 대기열 게이트 연동 및 k6 스파이크 테스트 비교 | - 회원가입 검증/암호화 및 카카오 로그인 연동<br>- Spring Security 세션 인증 구조 적용<br>- 예매 내역 조회 및 포인트 결제 흐름 구현 |
-
-### 개인 기여
-
-**전민규**
-- 초기 프로젝트 폴더 구조 및 DB 연결, Member/Concert/Reservation 엔터티·리포지토리 설계
-- 공연 등록/수정/삭제 API 및 프론트엔드(`register.html`), 페이징 목록 조회 기능 구현
-- 좌석 임시 점유 API 설계, 시간초과 시 자동 실패 처리 및 사용자 수동 취소 API 구현, Redis TTL 기반 동시성 제어 적용
-- 결제 페이지(결제 창) 프론트엔드 구현, Redis 환경설정 및 초기 테스트 컨트롤러 세팅
-
-**윤태형**
-- 세션 기반 로그인 핵심 비즈니스 로직/DTO 및 로그인 화면(`login.html`) 구현, 해시 비밀번호 비교 적용
-- `concertId`/`seatId` 기반 Redis 분산 락 좌석 임시 선점 기능 통합·고도화, 만료 락 자동 회수 스케줄러 도입
-- Redis Sorted Set 기반 대기열 시스템 설계·구현(Step 2 핵심 구현자), 대기열 인증 우회·좌석 예약 동시성 검증 취약점 수정, 대기열 게이트 연동 및 k6 스파이크 테스트 전/후 비교(6번 항목)
-- `PaymentHistory` 엔티티 설계, 마이페이지 보유 포인트 조회 API 구현, `main.html` 중심 SPA 구조 전환
-
-**김현정**
-- 회원가입 기능 및 검증, 비밀번호 암호화 적용, 카카오 소셜 로그인(`KakaoService`) 연동
-- `SecurityConfig` 기반 Spring Security 세션 인증 구조로 리팩터링, 관리자 권한 기반 공연 등록 제한 추가
-- 공연 상세 페이지, 마이페이지 내 예매 내역 목록/상세 조회, 포인트 결제 및 예매 생성 흐름(`PaymentSucceededEvent`/`PaymentFailedEvent`) 구현
-- 회원/결제 관련 리포지토리·서비스 테스트 코드 작성, Locust/k6 기반 부하 테스트 시나리오 작성
-
-<br>
-
 ## 8. 기술적 의사결정
 
 구현하면서 실제로 고민했던 선택지와 이유입니다.
@@ -240,7 +204,45 @@ Before는 시간이 지날수록 응답시간이 계속 우상향합니다(34 �
 
 <br>
 
-## 9. API 명세 (요약)
+## 9. 인프라 & 배포 (Getting Started)
+
+> 현재는 로컬 실행을 기준으로 하며, 별도 배포는 진행하지 않았습니다. (추후 배포 예정)
+
+### 사전 준비물
+- JDK 17
+- MySQL 서버
+- Redis 서버 (로컬 기본값: `localhost:6379`)
+
+### 실행 방법
+
+```bash
+# 1. 레포지토리 클론
+git clone <repository-url>
+cd Mingpark
+
+# 2. 로컬 환경 설정 파일 생성 (git에 커밋되지 않음)
+#    src/main/resources/application-local.properties
+#    - 기본값(DB_URL/DB_USERNAME/DB_PASSWORD 미지정 시)은
+#      jdbc:mysql://localhost:3306/mingpark_db, ming/ming 을 사용합니다.
+#    - 필요 시 아래 값을 재정의하세요.
+
+# 3. 애플리케이션 실행 (local 프로필)
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local
+```
+
+기본 프로필(`application.properties`)로 실행할 경우 아래 환경변수가 필요합니다.
+
+| 환경변수 | 설명 | 필수 여부 |
+| --- | --- | :---: |
+| `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | MySQL 접속 정보 | ✅ |
+| `KAKAO_REST_API_KEY`, `KAKAO_CLIENT_SECRET` | 카카오 로그인 연동 키 | 카카오 로그인 사용 시 |
+| `ADMIN_LOGIN_ID`, `ADMIN_PASSWORD`, `ADMIN_EMAIL` | 최초 기동 시 관리자 계정 자동 생성/동기화 | 관리자 기능 사용 시 |
+
+서버 기동 후 `http://localhost:8080` 에서 정적 페이지(`index.html`, `login.html`, `register.html`, `mypage.html`)에 접근할 수 있습니다.
+
+<br>
+
+## 10. API 명세 (요약)
 
 | 영역 | Method | Endpoint | 설명 | 인증 |
 | --- | --- | --- | --- | :---: |
