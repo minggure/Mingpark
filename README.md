@@ -129,7 +129,9 @@ k6 run src/test/java/load-test.js
 ```java
 // Before: 로그인만 하면 대기열과 무관하게 바로 선점 시도
 holdLockFacade.holdSeat(seatId, memberId);
+
 //----------------------------------------------------
+
 // After: 대기열을 통과(ALLOWED)한 사용자만 선점 가능
 if (!waitingService.isAllowed(concertId, memberId)) {
     return ResponseEntity.status(FORBIDDEN).body(...);
