@@ -169,11 +169,11 @@ holdLockFacade.holdSeat(seatId, memberId);
 
 저희는 **99즈** 팀입니다. 대용량 트래픽 챌린지를 해결하기 위해 다음과 같이 역할을 나누어 협업했습니다.
 
-| 전민규 (Team Leader) | 윤태형 | 김현정 |
+| 전민규 | 윤태형 | 김현정 |
 | :---: | :---: | :---: |
 | <img src="https://avatars.githubusercontent.com/u/204975717?v=4" width="130" height="130" style="border-radius: 50%;"/><br>[@전민규(조장)](https://github.com/minggure) | <img src="https://avatars.githubusercontent.com/u/52120957?v=4" width="130" height="130" style="border-radius: 50%;"/><br>[@윤태형](https://github.com/YunTaeng) | <img src="https://avatars.githubusercontent.com/u/156043679?v=4" width="130" height="130" style="border-radius: 50%;"/><br>[@김현정](https://github.com/anthia-kim) |
 | **Backend Lead** | **Backend / Infra** | **Backend / QA** |
-| - 초기 도메인(Member/Concert/Reservation) 및 DB 구조 설계<br>- 공연 등록/수정/삭제 API 구현<br>- 좌석 임시 점유 API 설계 및 시간초과 자동 실패 처리 | - 세션 기반 로그인 핵심 로직 구현<br>- Redis 분산 락 기반 좌석 임시 선점 및 대기열 시스템 구현<br>- 대기열 게이트 연동 및 k6 부하 테스트 전/후 비교 | - 회원가입 검증/암호화 및 카카오 소셜 로그인 연동<br>- Spring Security 세션 인증 구조 적용<br>- 예매 내역 조회 및 포인트 결제 흐름 구현 |
+| - 초기 도메인 엔터티 및 DB 구조 설계<br>- 공연 등록/수정/삭제 API 구현<br>- 좌석 임시 점유 및 시간초과 자동 실패 처리 | - 세션 기반 로그인 핵심 로직 구현<br>- Redis 분산 락 기반 좌석 선점 및 대기열 시스템 구현<br>- 대기열 게이트 연동 및 k6 부하 테스트 비교 | - 회원가입 검증/암호화 및 카카오 로그인 연동<br>- Spring Security 세션 인증 구조 적용<br>- 예매 내역 조회 및 포인트 결제 흐름 구현 |
 
 ### 개인 기여
 
