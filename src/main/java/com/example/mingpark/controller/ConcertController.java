@@ -4,17 +4,15 @@ import com.example.mingpark.domain.MemberRole;
 import com.example.mingpark.dto.ConcertCreatRequestDto;
 import com.example.mingpark.dto.ConcertDetailResponseDto;
 import com.example.mingpark.dto.ConcertResponseDto;
-import com.example.mingpark.facade.HoldLockFacade;
 import com.example.mingpark.security.CustomUserDetails; // 추가된 시큐리티 디테일 클래스 임포트
 import com.example.mingpark.service.ConcertService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 /**
  * 공연 컨트롤러
@@ -27,6 +25,8 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 public class ConcertController {
+    private static final int MAX_PAGE_SIZE = 100;
+
     private final ConcertService concertService;
 
     /**
@@ -38,7 +38,7 @@ public class ConcertController {
      */
     @PostMapping("/api/concerts")
     public ResponseEntity<String> createConcert(
-            @RequestBody ConcertCreatRequestDto request,
+            @Valid @RequestBody ConcertCreatRequestDto request,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         if (userDetails == null || userDetails.getRole() != MemberRole.ADMIN) {
@@ -61,7 +61,9 @@ public class ConcertController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "6") int size
     ) {
-        return concertService.getConcerts(page, size);
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
+        return concertService.getConcerts(safePage, safeSize);
     }
 
     /**
@@ -97,7 +99,7 @@ public class ConcertController {
     @PutMapping("/api/concerts/{concertId}")
     public ResponseEntity<String> updateConcert(
             @PathVariable Long concertId,
-            @RequestBody ConcertCreatRequestDto request,
+            @Valid @RequestBody ConcertCreatRequestDto request,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         if (userDetails == null || userDetails.getRole() != MemberRole.ADMIN) {
@@ -108,6 +110,3 @@ public class ConcertController {
     }
 
 }
-
-
-

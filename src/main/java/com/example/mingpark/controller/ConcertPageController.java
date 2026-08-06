@@ -1,6 +1,5 @@
 package com.example.mingpark.controller;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,7 +10,6 @@ import org.springframework.web.bind.annotation.PathVariable;
  * GET /concerts/{concertId} - 특정 공연 상세 화면 요청 시 메인 화면으로 리다이렉트 처리
  */
 @Controller
-@RequiredArgsConstructor
 public class ConcertPageController {
     /**
      * [GET] 특정 공연 상세 뷰 요청을 수신하여 쿼리 스트링(target)을 포함한 메인 화면 경로로 리다이렉트 처리.

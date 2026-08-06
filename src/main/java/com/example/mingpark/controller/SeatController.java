@@ -5,6 +5,7 @@ import com.example.mingpark.facade.HoldLockFacade;
 import com.example.mingpark.security.CustomUserDetails;
 import com.example.mingpark.service.SeatReservationService;
 import com.example.mingpark.service.SeatService;
+import com.example.mingpark.service.WaitingService;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ public class SeatController {
     private final SeatService seatService;
     private final SeatReservationService seatReservationService;
     private final HoldLockFacade holdLockFacade;
+    private final WaitingService waitingService;
     /**
      * GET /api/concerts/{concertId}/seats
      * 특정 공연의 전체 좌석 현황 조회
@@ -68,6 +70,13 @@ public class SeatController {
         Long memberId = userDetails.getMemberId();
         log.info("[SeatController] 좌석 선점 요청 concertId={}, seatId={}, memberId={}", concertId, seatId, memberId);
 
+        if (!waitingService.isAllowed(concertId, memberId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "status", "failed",
+                    "message", "대기열을 통과한 사용자만 좌석을 선점할 수 있습니다. 대기열에 먼저 참여해 주세요."
+            ));
+        }
+
         try {
             // 분산 락 및 DB HOLD 선점 처리를 원자적으로 일괄 처리
             holdLockFacade.holdSeat(seatId,memberId);
@@ -90,21 +99,5 @@ public class SeatController {
             ));
         }
     }
-    /**
-     * DELETE /api/concerts/{concertId}/seats/{seatId}/hold
-     * 임시 선점 수동 해제
-     * 유저가 선택했던  좌석을 수동으로 취소하거나 창을 닫을 때 선점 해제 처리
-     * Redis 장부에서 키를 강제 회수하고 DB 상태를 AVAILABLE로 롤백
-     */
-//    @DeleteMapping("/{concertId}/seats/{seatId}/hold")
-//    public ResponseEntity<String> releaseSeatHold(
-//            @PathVariable Long concertId,
-//            @PathVariable Long seatId) {
-//
-//        // 퍼사드를 통해 Redis 락(자물쇠) 즉시 파괴
-//        holdLockFacade.releaseHold(seatId);
-//
-//        return ResponseEntity.ok("좌석 임시 점유가 성공적으로 해제되었습니다.");
-//    }
 }
 

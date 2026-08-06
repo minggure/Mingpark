@@ -1,10 +1,7 @@
 package com.example.mingpark.config;
 
-//import com.example.mingpark.interceptor.LoginCheckInterceptor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
-//import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.nio.file.Path;
@@ -13,7 +10,6 @@ import java.nio.file.Path;
  * 실행 중 업로드된 공연 포스터를 /uploads 경로로 제공한다.
  */
 @Configuration
-@RequiredArgsConstructor
 public class WebConfig implements WebMvcConfigurer {
     /**
      * 외부 저장소 업로드 경로를 웹 URL 컨텍스트 주소와 매핑 처리.

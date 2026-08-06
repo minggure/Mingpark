@@ -38,3 +38,16 @@ build/
 
 ### Runtime uploads ###
 /uploads/
+
+### Graphify (지식 그래프 산출물) ###
+/graphify-out/
+
+# .graphifyignore
+vendor/
+node_modules/
+dist/
+*.generated.py
+
+### Claude Code (로컬 전용 설정) ###
+/.claude/
+/CLAUDE.md
