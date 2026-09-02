@@ -48,9 +48,9 @@ MINGPARK는 인터파크 티켓의 사용자 흐름을 참고해 만든 공연 �
 
 | 팀원 | 역할 | 주요 담당 |
 | --- | --- | --- |
-| [전민규](https://github.com/minggure) | 팀장 / Backend | 프로젝트 초기 구조와 회원·예매 도메인, 공연 목록·등록·수정·삭제, 좌석 조회·Redis 임시 선점과 TTL 만료 처리, 결제 화면, k6 부하 시나리오, 최종 통합 및 오류 수정 |
-| [윤태형](https://github.com/YunTaeng) | Backend / Web | 로그인과 세션 인증, 결제 이력 모델, DTO 불변성 개선, SPA 상세 조회 연동, Redis 좌석 락 고도화, 마이페이지·보유 포인트, Redis 동적 대기열과 접근 정책, 정적 리소스 분리 |
-| [김현정](https://github.com/anthia-kim) | Backend / Web | 공연·좌석 엔티티, 회원가입·입력 검증·비밀번호 암호화, 공연 상세 화면, 관리자 공연 등록 권한, Spring Security 세션 전환, 카카오 로그인, 포인트 결제·예매 생성, 예매 목록·상세 조회 |
+| [전민규 ](https://github.com/minggure) | 팀장 / Backend | 프로젝트 초기 구조와 회원·예매 도메인, 공연 목록·등록·수정·삭제, 좌석 조회·Redis 임시 선점과 TTL 만료 처리, 결제 화면, k6 부하 시나리오, 최종 통합 및 오류 수정 |
+| [윤태형 ](https://github.com/YunTaeng) | Backend / Web | 로그인과 세션 인증, 결제 이력 모델, DTO 불변성 개선, SPA 상세 조회 연동, Redis 좌석 락 고도화, 마이페이지·보유 포인트, Redis 동적 대기열과 접근 정책, 정적 리소스 분리 |
+| [김현정 ](https://github.com/anthia-kim) | Backend / Web | 공연·좌석 엔티티, 회원가입·입력 검증·비밀번호 암호화, 공연 상세 화면, 관리자 공연 등록 권한, Spring Security 세션 전환, 카카오 로그인, 포인트 결제·예매 생성, 예매 목록·상세 조회 |
 
 ### 전민규 담당 상세
 
