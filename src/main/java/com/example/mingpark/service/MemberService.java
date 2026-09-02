@@ -2,24 +2,33 @@ package com.example.mingpark.service;
 
 import com.example.mingpark.domain.Member;
 import com.example.mingpark.domain.MemberRole;
-import com.example.mingpark.dto.LoginRequestDto;
 import com.example.mingpark.dto.MemberSignupRequestDto;
 import com.example.mingpark.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.Optional;
-
+import java.util.UUID;
+/**
+ * 회원 가입 및 계정 정보 처리 비즈니스 로직 서비스.
+ */
 @Service
 @RequiredArgsConstructor
+// @RequiredArgsConstructor : Lombok이 생성자를 자동으로 만들어줌 (의존성 주입할 때 많이 씀)
+// @AutoWired 보다는 @RequiredArgsConstructor 선호
 public class MemberService {
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // 중복 아이디를 확인하고 비밀번호를 암호화하여 신규 회원을 저장
     @Transactional
+    // @Transactional 회원가입 작업을 하나의 트랜잭션으로 처리
+    /**
+     * 로그인 ID 중복 검증 및 패스워드 암호화를 거쳐 신규 회원 정보 영속화 처리.
+     *
+     * @param request 가입할 회원 상세 정보 DTO
+     * @throws IllegalArgumentException 이미 존재하는 로그인 ID일 경우 발생
+     */
     public void signup(MemberSignupRequestDto request) {
 
         // 입력한 로그인 아이디가 이미 존재하는지 확인
@@ -27,33 +36,39 @@ public class MemberService {
             throw new IllegalArgumentException("이미 사용 중인 아이디입니다.");
         }
 
-        Member member = new Member(
-                request.getName(),
-                request.getLoginId(),
-                // 평문 비밀번호가 DB에 저장되지 않도록 BCrypt 방식으로 암호화
-                passwordEncoder.encode(request.getPassword()),
-                request.getEmail(),
-                MemberRole.USER
-        );
+        Member member = Member.builder()
+                .name(request.getName())
+                .loginId(request.getLoginId())
+                // 비밀번호 암호화
+                .password(passwordEncoder.encode(request.getPassword()))
+                .email(request.getEmail())
+                .role(MemberRole.USER)
+                .build();
 
         memberRepository.save(member);
     }
-    public Member login(LoginRequestDto loginDto) {
-        // DB에서 로그인 아이디로 회원 조회
-        Optional<Member> findMemberOptional = memberRepository.findByLoginId(loginDto.getLoginId());
 
-        // 아이디가 없으면 로그인 실패(null)
-        if (findMemberOptional.isEmpty()) {
-            return null;
-        }
+    @Transactional
+    public Member findOrCreateKakaoMember(Long kakaoId, String nickname, String email) {
+        String loginId = "kakao_" + kakaoId;
 
-        Member member = findMemberOptional.get();
+        return memberRepository.findByLoginId(loginId)
+                .orElseGet(() -> {
+                    String safeEmail = email != null ? email : loginId + "@kakao.local";
+                    String safeName = nickname != null && !nickname.isBlank() ? nickname : "카카오사용자";
+                    if (safeName.length() > 20) {
+                        safeName = safeName.substring(0, 20);
+                    }
 
-        // 비밀번호 검사 (틀리면 로그인 실패)
-        if (!member.getPassword().equals(loginDto.getPassword())) {
-            return null;
-        }
-        // 성공하면 회원 정보 반환
-        return member;
+                    Member member = Member.builder()
+                            .name(safeName)
+                            .loginId(loginId)
+                            .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                            .email(safeEmail)
+                            .role(MemberRole.USER)
+                            .build();
+
+                    return memberRepository.save(member);
+                });
     }
 }

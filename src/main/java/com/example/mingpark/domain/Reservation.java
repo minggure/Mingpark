@@ -7,28 +7,28 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
-//테스트용
+/**
+ * 예매 정보 엔티티 (RESERVATION 테이블 매핑)
+ * 회원별 특정 공연 및 좌석에 대한 예매 상태, 결제 금액, 선점 만료 시각 및 상태별 변경 일시 관리.
+ */
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "reservation")
 @Getter
 public class Reservation {
-    @Id // // PK
-    @GeneratedValue(strategy = GenerationType.IDENTITY) //Auto Increment!
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "reservation_id")
     private Long id;
 
-    //  FK 1: 회원 (N:1 관계)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    //  FK 2: 공연 (N:1 관계)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "concert_id", nullable = false)
     private Concert concert;
 
-    //  FK 3: 좌석 (N:1 관계)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seat_id", nullable = false)
     private Seat seat;
@@ -67,6 +67,29 @@ public class Reservation {
         this.totalPrice = totalPrice;
         this.reservedAt = reservedAt;
         this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+    // 결제가 끝난 예약이므로 예약 완료 상태로 바꿈
+    public void completePayment() {
+        this.status = ReservationStatus.RESERVED;
+        this.confirmedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+    // 결제 실패 -> 취소 상태로 바꿈
+    public void failPayment() {
+        this.status = ReservationStatus.CANCELLED;
+        this.cancelledAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+    /**
+     * 예매를 취소 상태로 변경한다.
+     *
+     * <p>환불이 완료되었거나 사용자가 예매를 취소한 경우 호출하며,
+     * 취소 시각과 수정 시각을 현재 시각으로 갱신한다.</p>
+     */
+    public void cancel() {
+        this.status = ReservationStatus.CANCELLED;
+        this.cancelledAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
 }

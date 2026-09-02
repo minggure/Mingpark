@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Ming Park - 공연 등록</title>
+    <style>
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f5f6f7;
+            margin: 0;
+            padding: 30px 20px;
+            box-sizing: border-box;
+        }
+
+        .home-logo {
+            position: fixed;
+            top: 18px;
+            left: 28px;
+            z-index: 100;
+        }
+
+        .home-logo img {
+            display: block;
+            width: 210px;
+            height: auto;
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 350px;
+            text-align: center;
+        }
+        h2 {
+            margin-bottom: 25px;
+            color: #333;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        textarea { min-height: 100px; resize: vertical; }
+
+        .paste-zone {
+            padding: 22px 12px;
+            border: 2px dashed #9ccc65;
+            border-radius: 8px;
+            background-color: #f7fbf2;
+            color: #527a2d;
+            cursor: pointer;
+            line-height: 1.5;
+        }
+
+        .paste-zone:focus {
+            border-color: #4CAF50;
+            outline: none;
+            background-color: #f0f8e8;
+        }
+
+        .image-preview {
+            display: none;
+            width: 100%;
+            max-height: 300px;
+            margin-top: 12px;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
+        .upload-status {
+            margin-top: 8px;
+            color: #666;
+            font-size: 13px;
+        }
+
+        input:focus, textarea:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+            transition: background-color 0.2s;
+        }
+        .submit-btn:hover {
+            background-color: #45a049;
+        }
+
+        .cancel-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #e0e0e0;
+            color: #333;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+            transition: background-color 0.2s;
+        }
+        .cancel-btn:hover {
+            background-color: #d5d5d5;
+        }
+    </style>
+</head>
+<body>
+
+<a class="home-logo" href="/index.html" aria-label="Ming Park 메인으로 이동">
+    <img src="/images/mingpark-logo.png" alt="Ming Park">
+</a>
+
+<div class="login-box">
+    <h2 id="page-title">새 공연 등록</h2>
+
+    <div class="input-group">
+        <input type="text" id="concertTitle" placeholder="공연 제목 (예: 2026 콘서트)" required>
+    </div>
+    <div class="input-group">
+        <input type="text" id="place" placeholder="공연 장소 (예: 올림픽공원)" required>
+    </div>
+    <div class="input-group">
+        <input type="date" id="concertDate" required>
+    </div>
+    <div class="input-group">
+        <input type="time" id="concertTime" required>
+    </div>
+    <div class="input-group">
+        <input type="number" id="concertPrice" placeholder="티켓 가격 (숫자만 입력)" required>
+    </div>
+    <div class="input-group">
+        <input type="hidden" id="image">
+        <div id="paste-zone" class="paste-zone" tabindex="0">
+            웹에서 포스터를 이미지 복사한 뒤<br>
+            여기를 누르고 Ctrl+V로 붙여넣으세요.
+        </div>
+        <img id="image-preview" class="image-preview" alt="붙여넣은 공연 포스터 미리보기">
+        <div id="upload-status" class="upload-status">아직 붙여넣은 이미지가 없습니다.</div>
+    </div>
+    <div class="input-group">
+        <textarea id="description" placeholder="공연 설명" required></textarea>
+    </div>
+    <div class="input-group">
+        <label for="reservationStartAt">예매 시작 일시</label>
+        <input type="datetime-local" id="reservationStartAt" required>
+    </div>
+    <div class="input-group">
+        <label for="reservationEndAt">예매 종료 일시</label>
+        <input type="datetime-local" id="reservationEndAt" required>
+    </div>
+
+    <button class="submit-btn" id="submit-btn">등록하기</button>
+    <button class="cancel-btn" onclick="location.href='/'">취소</button>
+</div>
+
+<script>
+    // 브라우저 런타임 관리자(ADMIN) 권한 검증 및 강제 차단 가드
+    if (localStorage.getItem("loginMemberRole") !== "ADMIN") {
+        alert("관리자만 공연을 등록할 수 있습니다.");
+        location.href = "/";
+    }
+
+    const pasteZone = document.getElementById('paste-zone');
+    const imageInput = document.getElementById('image');
+    const imagePreview = document.getElementById('image-preview');
+    const uploadStatus = document.getElementById('upload-status');
+
+    // 붙여넣기 영역을 누르면 바로 Ctrl+V를 사용할 수 있도록 포커스를 준다.
+    pasteZone.addEventListener('click', () => pasteZone.focus());
+
+    // 클립보드 내 이미지 데이터 감지 및 붙여넣기(Ctrl+V) 이벤트 리스너
+    pasteZone.addEventListener('paste', event => {
+        const imageItem = Array.from(event.clipboardData.items)
+            .find(item => item.kind === 'file' && item.type.startsWith('image/'));
+
+        if (!imageItem) {
+            uploadStatus.textContent = '이미지 복사 후 붙여넣어 주세요. 이미지 주소 복사는 지원하지 않습니다.';
+            return;
+        }
+
+        uploadImage(imageItem.getAsFile());
+    });
+
+    // 클립보드 파일 자원을 Multipart로 변환하여 이미지 서버로 비동기 업로드하는 함수
+    function uploadImage(imageFile) {
+        // JSON이 아닌 실제 파일 전송이므로 multipart/form-data용 FormData를 사용한다.
+        const formData = new FormData();
+        formData.append('image', imageFile);
+        uploadStatus.textContent = '이미지를 업로드하는 중입니다...';
+
+        fetch('/api/concert-images', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => {
+                if (!response.ok) throw new Error();
+                return response.json();
+            })
+            .then(result => {
+                // 업로드된 파일 경로를 저장해 미리보기와 최종 공연 등록 요청에서 재사용한다.
+                imageInput.value = result.imageUrl;
+                imagePreview.src = result.imageUrl;
+                imagePreview.style.display = 'block';
+                uploadStatus.textContent = '포스터 이미지가 등록되었습니다.';
+            })
+            .catch(() => {
+                imageInput.value = '';
+                imagePreview.style.display = 'none';
+                uploadStatus.textContent = '이미지 업로드에 실패했습니다. JPG, PNG, GIF, WEBP 이미지를 사용해 주세요.';
+            });
+    }
+
+    // 신규 공연 정보 백엔드 송출 트랜잭션 및 유효성 검증 함수
+    function submitConcert() {
+        const concertTitleInput = document.getElementById('concertTitle');
+        const placeInput = document.getElementById('place');
+        const priceInput = document.getElementById('concertPrice')
+        const concertDateInput = document.getElementById('concertDate')
+        const concertTimeInput = document.getElementById('concertTime')
+        const reservationStartAtInput = document.getElementById('reservationStartAt')
+        const reservationEndAtInput = document.getElementById('reservationEndAt')
+
+        if (!concertTitleInput.value.trim()) {
+            alert('공연 제목을 입력해주세요.');
+            concertTitleInput.focus();
+            return;
+        }
+
+        if (!placeInput.value.trim()) {
+            alert('공연 장소를 입력해주세요.');
+            placeInput.focus();
+            return;
+        }
+        if(!concertDateInput.value) {
+            alert('공연 날짜를 입력해주세요.');
+            concertDateInput.focus();
+            return;
+        }
+
+        if(!concertTimeInput.value) {
+            alert('공연 시간을 입력해주세요.');
+            concertTimeInput.focus();
+            return;
+        }
+
+        if(!priceInput.value) {
+            alert('티켓 가격을 입력해주세요.');
+            priceInput.focus();
+            return;
+        }
+
+        if (!imageInput.value) {
+            alert('공연 포스터 이미지를 복사해 붙여넣어 주세요.');
+            pasteZone.focus();
+            return;
+        }
+
+        if(!reservationStartAtInput.value) {
+            alert('예매 시작 일시를 입력해주세요.');
+            reservationStartAtInput.focus();
+            return;
+        }
+
+        if(!reservationEndAtInput.value) {
+            alert('예매 종료 일시를 입력해주세요.');
+            reservationEndAtInput.focus();
+            return;
+        }
+
+        // 예매 시작일 및 종료일 간의 선후 정합성 비교 가드
+        if (reservationStartAtInput.value > reservationEndAtInput.value) {
+            alert('예매 종료 일시는 예매 시작 일시보다 늦어야 합니다.');
+            reservationEndAtInput.focus();
+            return;
+        }
+
+        const data = {
+            concertTitle: document.getElementById('concertTitle').value,
+            place: document.getElementById('place').value,
+            concertDate: document.getElementById('concertDate').value,
+            concertTime: document.getElementById('concertTime').value + ":00",
+            concertPrice: document.getElementById('concertPrice').value,
+            image: imageInput.value,
+            description: document.getElementById('description').value,
+            reservationStartAt: document.getElementById('reservationStartAt').value,
+            reservationEndAt: document.getElementById('reservationEndAt').value
+        };
+
+        fetch('/api/concerts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+            .then(response => {
+                if(response.ok) {
+                    alert('공연이 성공적으로 등록되었습니다!');
+                    location.href = '/';
+                } else if (response.status === 403) {
+                    alert("관리자만 공연을 등록할 수 있습니다.");
+                    location.href = '/';
+                } else {
+                    alert('등록 실패! 다시 시도해주세요.');
+                }
+            });
+    }
+
+    // URL 쿼리 파라미터 기반 등록/수정 모드 동적 렌더링 및 생명주기 초기화 함수
+    window.onload = () => {
+        const params = new URLSearchParams(window.location.search);
+        const mode = params.get('mode');
+        const concertId = params.get('id');
+
+        // 1. 요소들이 존재하는지 먼저 확인하는 방어 코드
+        const pageTitle = document.getElementById('page-title');
+        const submitBtn = document.getElementById('submit-btn');
+
+        // 수정(edit) 모드로 진입 시 로컬 스토리지 원장 데이터를 입력 필드에 자동 매핑
+        if (mode === 'edit') {
+            if (pageTitle) pageTitle.innerText = "공연 수정";
+            if (submitBtn) submitBtn.innerText = "수정하기";
+
+            const data = JSON.parse(localStorage.getItem("editConcertData"));
+
+            // 2. 이제 위에서 맞춘 ID들을 사용합니다.
+            document.getElementById('concertTitle').value = data.concertTitle;
+            document.getElementById('place').value = data.place;
+            document.getElementById('concertDate').value = data.concertDate;
+            document.getElementById('concertTime').value = data.concertTime;
+            document.getElementById('concertPrice').value = data.concertPrice;
+            document.getElementById('description').value = data.description;
+            document.getElementById('reservationStartAt').value = data.reservationStartAt;
+            document.getElementById('reservationEndAt').value = data.reservationEndAt;
+
+            // 이미지 처리
+            if(data.image) {
+                document.getElementById('image').value = data.image;
+                document.getElementById('image-preview').src = data.image;
+                document.getElementById('image-preview').style.display = 'block';
+            }
+
+            submitBtn.onclick = () => updateConcert(concertId);
+        } else {
+            submitBtn.onclick = () => submitConcert();
+        }
+    };
+
+    // 기존 등록 정보에 대한 RESTful PUT 데이터 수정 전송 함수
+    function updateConcert(concertId) {
+        const data = {
+            concertTitle: document.getElementById('concertTitle').value,
+            place: document.getElementById('place').value,
+            concertDate: document.getElementById('concertDate').value,
+            concertTime: document.getElementById('concertTime').value,
+            concertPrice: document.getElementById('concertPrice').value,
+            description: document.getElementById('description').value,
+            image: document.getElementById('image').value,
+            reservationStartAt: document.getElementById('reservationStartAt').value,
+            reservationEndAt: document.getElementById('reservationEndAt').value
+        };
+
+        fetch(`/api/concerts/${concertId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+            .then(res => {
+                if (res.ok) {
+                    alert("수정 완료!");
+                    location.href = "/index.html";
+                } else {
+                    alert("수정 실패...");
+                }
+            });
+    }
+</script>
+
+</body>
+</html>

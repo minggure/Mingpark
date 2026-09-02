@@ -4,29 +4,28 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
-import lombok.Setter;
-
-@Setter @Getter
+import lombok.RequiredArgsConstructor;
+/**
+ * 회원 가입 요청 DTO.
+ */
+@Getter
+@RequiredArgsConstructor
 public class MemberSignupRequestDto {
-
-    // 빈 값과 DB 컬럼 길이를 함께 검증
+// 회원가입 요청값을 전달, 입력 형식을 검증
     @NotBlank
     @Size(max = 20)
-    private String name;
+    private final String name;
 
-    // 로그인 아이디는 4자 이상
     @NotBlank
     @Size(min = 4, max = 50)
-    private String loginId;
+    private final String loginId;
 
-    // 너무 짧은 비밀번호 입력을 방지
     @NotBlank
     @Size(min = 8, max = 100)
-    private String password;
+    private final String password;
 
-    // 빈 값, 이메일 형식, DB 컬럼 길이를 함께 검증
     @NotBlank
     @Email
     @Size(max = 100)
-    private String email;
+    private final String email;
 }

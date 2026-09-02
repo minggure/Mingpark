@@ -2,135 +2,854 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Ming Park - 공연 목록</title>
+    <title>Ming Park - 인기 공연 예매</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/mypage.js" defer></script>
     <style>
 
-        body {
-            font-family: 'Malgun Gothic', sans-serif;
-            background-color: #f5f6f7;
-            margin: 0;
-            padding: 50px 20px;
+        .concert-card { position: relative; } /* 메뉴 위치 기준점 */
+        .kebab-menu { position: absolute; top: 10px; right: 10px; z-index: 10; }
+        .kebab-btn {
+            background: white; border: 1px solid #ddd; border-radius: 50%;
+            width: 30px; height: 30px; font-size: 18px; font-weight: bold;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding-bottom: 4px;
         }
+        .kebab-dropdown {
+            display: none; position: absolute; right: 0; top: 35px;
+            background: white; border: 1px solid #ddd; box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            border-radius: 5px; min-width: 100px; overflow: hidden;
+        }
+        .kebab-dropdown.show { display: block; }
+        .kebab-dropdown button {
+            width: 100%; padding: 10px; border: none; background: transparent;
+            color: #dc3545; font-weight: bold; cursor: pointer; text-align: center;
+        }
+        .kebab-dropdown button:hover { background: #f8d7da; }
 
-        h2 {
+    <style>
+        .waiting-box {
             text-align: center;
-            margin-bottom: 40px;
-            color: #333;
-            font-size: 28px;
-        }
-
-        #concert-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 30px;
-            justify-content: center;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-
-        .concert-card {
-            background: white;
             padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            width: 300px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            transition: transform 0.2s, box-shadow 0.2s;
         }
-
-        /
-        .concert-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-        }
-
-        .concert-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
+        .waiting-spinner {
+            font-size: 40px;
             margin-bottom: 15px;
-            text-align: left;
+            animation: spin 2s linear infinite;
+            display: inline-block;
         }
-
-        .concert-info {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 8px;
-            text-align: left;
-            line-height: 1.5;
-        }
-
-        .concert-price {
-            font-size: 16px;
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .queue-count {
+            font-size: 24px;
+            color: #ff4757;
             font-weight: bold;
-            color: #333;
-            margin-top: 15px;
-            margin-bottom: 15px;
-            text-align: right;
-        }
-
-
-        .book-button {
-            width: 100%;
-            padding: 12px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 15px;
-            font-weight: bold;
-            text-align: center;
-            transition: background-color 0.2s;
-        }
-
-        .book-button:hover {
-            background-color: #45a049;
+            margin: 10px 0;
         }
     </style>
 </head>
 <body>
 
-<h2>Ming Park 공연 목록</h2>
+<div class="navbar">
+    <div class="navbar-brand" onclick="showListPage()">
+        <img class="brand-logo" src="/images/mingpark-logo.png" alt="Ming Park">
+    </div>
+    <div class="auth-area" id="auth-area"></div>
+</div>
 
-<div id="concert-container">
+<div class="container">
+    <section id="list-section" class="page-section active">
+        <h2>🎵 현재 상영 및 예정 공연</h2>
+        <div id="concert-container"></div>
+        <div id="pagination"></div>
+    </section>
+
+    <section id="detail-section" class="page-section">
+        <div class="detail-layout" id="detail-content"></div>
+    </section>
+
+    <section id="mypage-section" class="page-section"></section>
+</div>
+
+<div class="modal-overlay" id="waiting-modal">
+    <div class="modal-box">
+        <div class="waiting-box">
+            <div class="waiting-spinner">⏳</div>
+            <h3>서비스 접속 대기 중입니다</h3>
+            <p>현재 동시 접속자가 많아 순차적으로 진입 중입니다.<br>잠시만 기다려주시면 좌석 선택 창으로 이동합니다.</p>
+            <div class="queue-count" id="queue-wait-count">계산 중...</div>
+            <p style="font-size: 13px; color: #888;">⚠️ 브라우저를 닫거나 새로고침하면 대기 시간이 늘어날 수 있습니다.</p>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="login-modal">
+    <div class="modal-box">
+        <span class="modal-close" onclick="closeModal('login-modal')">&times;</span>
+        <h3>Ming Park 로그인</h3>
+        <div class="input-group"><input type="text" id="loginId" placeholder="아이디를 입력하세요"></div>
+        <div class="input-group"><input type="password" id="password" placeholder="비밀번호를 입력하세요"></div>
+        <button class="modal-submit" onclick="handleLogin()">로그인하기</button>
+        <div class="modal-divider">간편 로그인</div>
+        <a class="kakao-login-button" href="/members/kakao/login" aria-label="카카오 로그인">
+            <img src="/images/kakao_login_medium_narrow.png" alt="카카오 로그인">
+        </a>
+    </div>
+</div>
+
+<div class="modal-overlay" id="signup-modal">
+    <div class="modal-box">
+        <span class="modal-close" onclick="closeModal('signup-modal')">&times;</span>
+        <h3>Ming Park 회원가입</h3>
+        <div class="input-group">
+            <input type="text" id="newName" placeholder="이름을 입력하세요">
+        </div>
+        <div class="input-group">
+            <input type="text" id="newLoginId" placeholder="아이디를 입력하세요 (4자 이상)">
+        </div>
+        <div class="input-group">
+            <input type="password" id="newPassword" placeholder="비밀번호를 입력하세요 (8자 이상)">
+        </div>
+        <div class="input-group">
+            <input type="email" id="newEmail" placeholder="이메일을 입력하세요">
+        </div>
+        <button class="modal-submit" onclick="handleSignup()">회원가입하기</button>
+        <div class="modal-divider">간편 시작</div>
+        <p class="social-hint">카카오 계정으로 가입 없이 바로 시작할 수 있어요.</p>
+        <a class="kakao-login-button" href="/members/kakao/login" aria-label="카카오로 시작하기">
+            <img src="/images/kakao_login_medium_narrow.png" alt="카카오 로그인">
+        </a>
+    </div>
+</div>
+
+<div class="modal-overlay" id="seat-modal">
+    <div class="modal-box seat-modal-box">
+        <span class="modal-close" onclick="closeModal('seat-modal')">&times;</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0; font-size: 20px;">🟢 실시간 좌석 배치도</h3>
+            <button id="refresh-seats-btn" class="refresh-btn">
+                <span>🔄</span> 좌석 새로고침
+            </button>
+        </div>
+        <div class="stage-area">S T A G E</div>
+        <div class="zone-container">
+            <div class="seat-zone"><div class="zone-title">A 구역 (좌측)</div><div id="zone-A" class="seat-grid"></div></div>
+            <div class="seat-zone"><div class="zone-title">B 구역 (우측)</div><div id="zone-B" class="seat-grid"></div></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="payment-modal">
+    <div class="modal-box payment-modal-box">
+        <span class="modal-close" onclick="cancelPayment()">&times;</span>
+        <h3 class="payment-header">💳 결제 정보 확인</h3>
+
+        <div class="receipt-box">
+            <p><strong>🎵 공연 정보:</strong> <span id="pay-concert-title"></span></p>
+            <p><strong>🪑 선택 좌석:</strong> <span id="pay-seat-number"></span>번 좌석</p>
+
+            <hr class="divider-dashed">
+
+            <div class="receipt-row">
+                <span><strong>💰 현재 잔액</strong></span>
+                <span><span id="my-point" class="receipt-value"></span> 원</span>
+            </div>
+
+            <div class="receipt-row">
+                <span><strong>💸 결제 금액</strong></span>
+                <span><span id="pay-price" class="receipt-value text-red"></span> 원</span>
+            </div>
+
+            <hr class="divider-solid">
+
+            <div class="receipt-row">
+                <span><strong>📉 결제 후 잔액</strong></span>
+                <span><span id="pay-remain-point" class="receipt-value text-bold"></span> 원</span>
+            </div>
+        </div>
+
+        <div class="terms-box">
+            <strong>[결제 및 환불 규정]</strong><br>
+            1. 본 결제는 즉시 처리되며, 회원님의 포인트에서 차감됩니다.<br>
+            2. 공연 시작 24시간 전까지는 100% 환불이 가능합니다.<br>
+            3. 공연 당일 취소 및 환불은 절대 불가합니다.<br>
+            4. 불법 매크로 이용 적발 시 예매가 강제 취소되며 수수료가 부과될 수 있습니다.<br>
+            5. 기타 상세 규정은 Ming Park 이용약관에 따릅니다.
+        </div>
+
+        <label class="agree-label">
+            <input type="checkbox" id="agree-checkbox" class="agree-checkbox" onchange="togglePayButton()">
+            <span>위 결제 및 환불 규정을 확인하였으며, 이에 동의합니다.</span>
+        </label>
+
+        <div class="btn-group">
+            <button class="btn btn-primary" id="btn-pay-submit" onclick="proceedPayment()" disabled>결제하기</button>
+            <button class="btn btn-danger" onclick="cancelPayment()">취소</button>
+        </div>
+    </div>
 </div>
 
 <script>
+    let currentPage = 0;
+    let targetConcertId = null;
+    let myCurrentPoints = 0;
+    let currentReservationId = null;
+    let currentConcertTitle = "";
+    let currentConcertPrice = 0;
+    let pollingIntervalId = null;
 
-    fetch('/api/concerts')
-        .then(response => response.json())
-        .then(concerts => {
-            const container = document.getElementById('concert-container');
+    window.onload = function() {
+        syncLoginStatus();
+        loadConcerts(currentPage);
 
-            // 가져온 공연 데이터만큼 반복문 돌리기
-            concerts.forEach(concert => {
-                const card = document.createElement('div');
-                card.className = 'concert-card';
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetId = urlParams.get('target');
+        const modal = urlParams.get('modal');
 
+        if (targetId) {
+            loadConcertDetail(targetId);
+        }
 
-                card.innerHTML = `
-                    <div>
-                        <div class="concert-title">${concert.concertTitle}</div>
-                        <div class="concert-info">📍 장소 : ${concert.place}</div>
-                        <div class="concert-info">📅 날짜 : ${concert.concertDate}</div>
-                        <div class="concert-info">⏰ 시간 : ${concert.concertTime}</div>
-                    </div>
-                    <div>
-                        <div class="concert-price">₩ ${concert.concertPrice.toLocaleString()}</div>
-                        <button class="book-button" onclick="location.href='/login.html'">예매하기</button>
-                    </div>
-                `;
+        if (modal === 'signup') {
+            openModal('signup-modal');
+            window.history.replaceState({}, document.title, '/index.html');
+        }
+    };
 
-                container.appendChild(card);
-            });
+    function checkLoginStatus() {
+        const authArea = document.getElementById('auth-area');
+        const loginUser = localStorage.getItem("loginMemberName");
+        const loginRole = localStorage.getItem("loginMemberRole");
+
+        if (loginUser) {
+            const registerButton = loginRole === 'ADMIN'
+                ? `<button class="nav-btn btn-primary" onclick="location.href='/register.html'">공연 등록</button>`
+                : '';
+            authArea.innerHTML = `
+                <span class="user-welcome" style="cursor:pointer;" onclick="showMyPage()">👋 ${loginUser}님 환영합니다!</span>
+                ${registerButton}
+                <button class="nav-btn btn-secondary" onclick="handleLogout()">로그아웃</button>
+            `;
+        } else {
+            authArea.innerHTML = `
+                <button class="nav-btn btn-primary" onclick="openModal('login-modal')">로그인</button>
+                <button class="nav-btn btn-secondary" onclick="openModal('signup-modal')">회원가입</button>
+            `;
+        }
+    }
+
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    function syncLoginStatus() {
+        fetch('/members/me', { credentials: 'include' })
+            .then(res => res.json())
+            .then(result => {
+                if (result.status === 'authenticated') {
+                    localStorage.setItem("loginMemberName", result.memberName);
+                    localStorage.setItem("loginMemberRole", result.role);
+                } else {
+                    localStorage.removeItem("loginMemberName");
+                    localStorage.removeItem("loginMemberRole");
+                }
+                checkLoginStatus();
+            })
+            .catch(() => checkLoginStatus());
+    }
+
+    function handleLogin() {
+        const loginId = document.getElementById('loginId').value;
+        const password = document.getElementById('password').value;
+        fetch('/members/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ loginId, password })
         })
-        .catch(error => console.error('공연 데이터를 불러오는 중 에러 발생:', error));
-</script>
+            .then(res => res.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    alert(result.memberName + '님, 환영합니다!');
+                    localStorage.setItem("loginMemberName", result.memberName);
+                    localStorage.setItem("loginMemberRole", result.role);
+                    closeModal('login-modal');
+                    checkLoginStatus();
+                    loadConcerts(currentPage); // 로그인 시 관리자 메뉴 확인을 위해 목록 새로고침
+                } else { alert('정보를 다시 확인해주세요.'); }
+            });
+    }
 
+    function handleSignup() {
+        const nameInput = document.getElementById('newName');
+        const loginIdInput = document.getElementById('newLoginId');
+        const passwordInput = document.getElementById('newPassword');
+        const emailInput = document.getElementById('newEmail');
+
+        const name = nameInput.value.trim();
+        const loginId = loginIdInput.value.trim();
+        const password = passwordInput.value;
+        const email = emailInput.value.trim();
+
+        if (!name) {
+            alert('이름을 입력해주세요.');
+            nameInput.focus();
+            return;
+        }
+
+        if (name.length > 20) {
+            alert('이름은 20자 이하로 입력해주세요.');
+            nameInput.focus();
+            return;
+        }
+
+        if (loginId.length < 4 || loginId.length > 50) {
+            alert('아이디는 4자 이상 50자 이하로 입력해주세요.');
+            loginIdInput.focus();
+            return;
+        }
+
+        if (password.length < 8 || password.length > 100) {
+            alert('비밀번호는 8자 이상 100자 이하로 입력해주세요.');
+            passwordInput.focus();
+            return;
+        }
+
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(email) || email.length > 100) {
+            alert('올바른 이메일 형식으로 100자 이하로 입력해주세요.');
+            emailInput.focus();
+            return;
+        }
+
+        fetch('/members/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, loginId, password, email })
+        })
+            .then(async res => {
+                const result = await res.json();
+
+                if (!res.ok) {
+                    if (result.status === 'duplicate') {
+                        throw new Error('이미 사용 중인 아이디입니다.');
+                    }
+
+                    if (result.status === 'validation_error') {
+                        throw new Error('회원가입 조건에 맞게 입력해주세요.');
+                    }
+
+                    throw new Error('회원가입에 실패했습니다.');
+                }
+
+                return result;
+            })
+            .then(result => {
+                if (result.status === 'success') {
+                    alert('회원가입 완료!'); closeModal('signup-modal'); openModal('login-modal');
+                }
+            })
+            .catch(error => {
+                alert(error.message || '회원가입에 실패했습니다. 아이디 중복 혹은 입력값을 확인해 주세요.');
+                console.error('Error:', error);
+            });
+    }
+
+    function handleLogout() {
+        fetch('/members/logout', { method: 'POST' }).finally(() => {
+            localStorage.removeItem("loginMemberName");
+            localStorage.removeItem("loginMemberRole");
+
+            const loginIdInput = document.getElementById('loginId');
+            const passwordInput = document.getElementById('password');
+
+            if (loginIdInput) loginIdInput.value = '';
+            if (passwordInput) passwordInput.value = '';
+
+            alert('로그아웃 되었습니다.');
+            showListPage();
+            checkLoginStatus();
+        });
+    }
+
+    function showListPage() {
+        document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+        document.getElementById('detail-section').classList.remove('active');
+        document.getElementById('mypage-section').classList.remove('active');
+        document.getElementById('list-section').classList.add('active');
+        loadConcerts(currentPage);
+    }
+
+    function showMyPage() {
+        const myPageSection = document.getElementById('mypage-section');
+
+        fetch('/mypage.html')
+            .then(res => {
+                if (!res.ok) throw new Error("mypage.html 파일을 찾을 수 없습니다.");
+                return res.text();
+            })
+            .then(htmlTemplate => {
+                myPageSection.innerHTML = htmlTemplate;
+
+                document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+                myPageSection.classList.add('active');
+
+                return fetch('/api/users/me/points', { credentials: 'include' });
+            })
+            .then(res => {
+                if (res && (res.status === 401 || res.status === 403)) {
+                    handle401Error();
+                    return null;
+                }
+                return res ? res.json() : null;
+            })
+            .then(data => {
+                if (!data) return;
+
+                const name = data.name || localStorage.getItem("loginMemberName") || "-";
+                const email = data.email || "-";
+                myCurrentPoints = data.point !== undefined ? data.point : myCurrentPoints;
+
+                document.getElementById('my-name').innerText = name;
+                document.getElementById('my-email').innerText = email;
+                document.getElementById('my-point').innerText = Number(myCurrentPoints).toLocaleString() + "P";
+            })
+            .catch((err) => {
+                console.warn("가상 데이터 출력: ", err.message);
+                if (document.getElementById('my-name')) {
+                    document.getElementById('my-name').innerText = localStorage.getItem("loginMemberName") || "테스트유저";
+                    document.getElementById('my-email').innerText = "test-user@mingpark.com";
+                    document.getElementById('my-point').innerText = Number(myCurrentPoints).toLocaleString() + "P";
+                }
+            });
+    }
+
+    // loadConcerts: 관리자일 때만 카드 우측 상단에 점 3개 메뉴 렌더링
+    function loadConcerts(page) {
+        currentPage = page;
+        fetch(`/api/concerts?page=${page}&size=6`)
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById('concert-container');
+                container.innerHTML = '';
+
+                const userRole = localStorage.getItem("loginMemberRole");
+                const isAdmin = userRole === 'ADMIN';
+
+                data.content.forEach(concert => {
+                    const card = document.createElement('div');
+                    card.className = 'concert-card';
+                    card.onclick = () => loadConcertDetail(concert.concertId);
+
+                    // 점 3개(케밥 메뉴) HTML. 이벤트 버블링 방지 처리 포함
+                    const kebabHtml = isAdmin ? `
+    <div class="kebab-menu" onclick="event.stopPropagation()">
+        <button class="kebab-btn" onclick="toggleKebabMenu(event, ${concert.concertId})">⋮</button>
+        <div id="dropdown-${concert.concertId}" class="kebab-dropdown">
+            <button onclick="editConcertAction(${concert.concertId})">공연 수정</button>
+            <button onclick="deleteConcertAction(event, ${concert.concertId})">공연 삭제</button>
+        </div>
+    </div>
+` : '';
+
+                    card.innerHTML = `
+                        ${kebabHtml}
+                        <div>
+                            <img class="concert-image" src="${concert.image}">
+                            <div class="concert-title">${concert.concertTitle}</div>
+                            <div class="concert-info">📍 장소: ${concert.place || '추후 공지'}</div>
+                            <div class="concert-info">📅 날짜: ${concert.concertDate}</div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+                renderPagination(data.totalPages);
+            });
+    }
+
+    function loadConcertDetail(concertId) {
+        targetConcertId = concertId;
+        fetch(`/api/concerts/${concertId}`)
+            .then(res => res.json())
+            .then(concert => {
+                currentConcertTitle = concert.concertTitle;
+                currentConcertPrice = concert.concertPrice;
+                const detailContent = document.getElementById('detail-content');
+                const priceFormatted = Number(concert.concertPrice).toLocaleString();
+
+                detailContent.innerHTML = `
+                    <section><img class="poster" src="${concert.image}"></section>
+                    <section>
+                        <h1 class="detail-title">${concert.concertTitle}</h1>
+                        <p class="description">${concert.description || '등록된 공연 설명이 없습니다.'}</p>
+                        <div class="info-row"><span class="info-label">장소</span><span>${concert.place || '장소 미정'}</span></div>
+                        <div class="info-row"><span class="info-label">공연 일정</span><span>${concert.concertDate} ${concert.concertTime}</span></div>
+                        <div class="info-row"><span class="info-label">가격</span><span>${priceFormatted}원</span></div>
+                        <div class="info-row"><span class="info-label">예매 여부</span><span>${concert.reservationAvailable ? '예매 가능' : '예매 불가'}</span></div>
+
+                        <div class="actions">
+                            <button class="btn btn-secondary" onclick="showListPage()">목록으로</button>
+                            <button class="btn btn-primary" ${concert.reservationAvailable ? '' : 'disabled'} onclick="tryReserve()">
+                                ${concert.reservationAvailable ? '예매하기' : '예매 불가'}
+                            </button>
+                        </div>
+                    </section>
+                `;
+                document.getElementById('list-section').classList.remove('active');
+                document.getElementById('detail-section').classList.add('active');
+            })
+            .catch(() => alert("공연 상세 정보를 불러오는 데 실패했습니다."));
+    }
+
+    /*  예매하기 클릭 시 대기열 참가 프로세스로 전면 교체 */
+    function tryReserve() {
+        const loginUser = localStorage.getItem("loginMemberName");
+        if (!loginUser) {
+            alert("🔒 로그인이 필요한 서비스입니다! 상단의 로그인 버튼을 이용해 주세요.");
+            openModal('login-modal');
+            return;
+        }
+
+        if (!targetConcertId) return;
+
+        // 대기열 참가 API 요청 호출
+        openModal('waiting-modal');
+        document.getElementById('queue-wait-count').innerText = "대기열 등록 중...";
+
+        fetch(`/api/concerts/${targetConcertId}/waiting/join`, { method: 'POST', credentials: 'include' })
+            .then(res => {
+                // 대기열 최초 진입 시 세션이 이미 만료되어 있다면 가드 작동
+                if (res.status === 401) {
+                    handle401Error();
+                    throw new Error("세션 만료로 인한 대기열 진입 차단");
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (data.status === 'ALLOWED') {
+                    // 이미 허가된 유저인 경우 즉시 좌석 선택창으로 워프
+                    closeModal('waiting-modal');
+                    openModal('seat-modal');
+                    loadSeats();
+                } else {
+                    // 대기 상태인 경우 1초마다 실시간 순번 조회 시작 (Polling)
+                    document.getElementById('queue-wait-count').innerText = `내 앞 대기 인원: ${data.rank}명`;
+                    startWaitingPolling();
+                }
+            })
+            .catch(() => {
+                alert("대기열 참가에 실패했습니다. 다시 시도해 주세요.");
+                closeModal('waiting-modal');
+            });
+    }
+
+    /* 1초 간격 실시간 대기 순번 추적 타이머 함수 */
+    function startWaitingPolling() {
+        if (pollingIntervalId) clearInterval(pollingIntervalId);
+
+        pollingIntervalId = setInterval(() => {
+            fetch(`/api/concerts/${targetConcertId}/waiting/status`, { credentials: 'include' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'ALLOWED') {
+                        //내 차례가 되면 대기열 모달 닫고 좌석 모달 오픈
+                        clearInterval(pollingIntervalId);
+                        pollingIntervalId = null;
+                        closeModal('waiting-modal');
+
+                        openModal('seat-modal');
+                        loadSeats();
+                    } else {
+                        // 아직 대기 중이면 화면 텍스트 실시간 갱신
+                        document.getElementById('queue-wait-count').innerText = `내 앞 대기 인원: ${data.rank}명`;
+                    }
+                })
+                .catch(() => console.error("대기열 상태를 가져오는 중 오류 발생"));
+        }, 1000); // 1초 주기로 체크
+    }
+
+    function loadSeats() {
+        if (!targetConcertId) return;
+
+        const zoneA = document.getElementById("zone-A");
+        const zoneB = document.getElementById("zone-B");
+        zoneA.innerHTML = "동기화 중...";
+        zoneB.innerHTML = "동기화 중...";
+
+        fetch(`/api/concerts/${targetConcertId}/seats`, { credentials: 'include' })
+            .then(res => {
+                if (res.status === 401) {
+                    handle401Error();
+                    throw new Error("Unauthorized");
+                }
+                return res.json();
+            })
+            .then(data => {
+                zoneA.innerHTML = "";
+                zoneB.innerHTML = "";
+
+                data.forEach(seat => {
+                    const seatDiv = document.createElement("div");
+                    seatDiv.className = `seat ${seat.status}`;
+                    seatDiv.innerText = seat.seatNumber;
+
+                    if (seat.status === 'AVAILABLE') {
+                        seatDiv.onclick = () => {
+                            if (confirm(`${seat.seatNumber}번 좌석을 선택 하시겠습니까?`)) {
+                                const actualSeatId = seat.seatId !== undefined ? seat.seatId : (seat.id !== undefined ? seat.id : seat.seatNumber);
+                                startReservationFlow(targetConcertId, actualSeatId, seat.seatNumber);
+                            }
+                        };
+                    }
+
+                    if (seat.seatNumber <= 25) zoneA.appendChild(seatDiv);
+                    else zoneB.appendChild(seatDiv);
+                });
+            })
+            .catch(() => {
+                zoneA.innerHTML = ""; zoneB.innerHTML = "";
+                for (let i = 1; i <= 50; i++) {
+                    const seatDiv = document.createElement("div");
+                    seatDiv.className = `seat AVAILABLE`;
+                    seatDiv.innerText = i;
+                    seatDiv.onclick = () => {
+                        if (confirm(`${i}번 좌석을 선택하시겠습니까?`)) {
+                            startReservationFlow(targetConcertId, i, i);
+                        }
+                    };
+                    if (i <= 25) zoneA.appendChild(seatDiv);
+                    else zoneB.appendChild(seatDiv);
+                }
+            });
+    }
+
+    function startReservationFlow(concertId, seatId, seatNumber) {
+        //좌석 선정시 HOLD 상태로 바꾸는 API 호출
+        fetch(`/api/concerts/${concertId}/seats/${seatId}/hold`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        })
+            .then(async res => {
+                if (res.status === 401) {
+                    handle401Error();
+                    return;
+                }
+
+                const result = await res.json();
+
+                if (res.ok) {
+                    const reservationResult = await createReservation(concertId, seatId);
+
+                    if (!reservationResult || reservationResult.status !== "success") {
+                        alert(reservationResult?.message || "예매 생성에 실패했습니다.");
+                        loadSeats();
+                        return;
+                    }
+                    const reservationId = reservationResult.reservationId;
+
+                    currentReservationId = reservationId;
+
+                    try {
+                        const pointRes = await fetch('/api/users/me/points', { credentials: 'include' });
+                        if (pointRes.ok) {
+                            const pointData = await pointRes.json();
+                            myCurrentPoints = pointData.point !== undefined ? pointData.point : 0;
+                        }
+                    } catch (e) {
+                        console.error("잔액 조회 중 에러 발생:", e);
+                    }
+
+                    document.getElementById("pay-concert-title").innerText = currentConcertTitle;
+                    document.getElementById("pay-seat-number").innerText = seatNumber;
+                    document.getElementById("pay-price").innerText = Number(currentConcertPrice).toLocaleString();
+                    document.getElementById("my-point").innerText = Number(myCurrentPoints).toLocaleString();
+
+                    const remainPoint = myCurrentPoints - currentConcertPrice;
+                    const remainEl = document.getElementById("pay-remain-point");
+
+                    if (remainPoint < 0) {
+                        remainEl.innerText = "잔액 부족 (" + Number(remainPoint).toLocaleString() + ")";
+                        remainEl.style.color = "#e53935";
+                    } else {
+                        remainEl.innerText = Number(remainPoint).toLocaleString();
+                        remainEl.style.color = "#4CAF50";
+                    }
+
+                    document.getElementById("agree-checkbox").checked = false;
+                    const payBtn = document.getElementById("btn-pay-submit");
+                    payBtn.disabled = true;
+                    payBtn.style.backgroundColor = "#ccc";
+                    payBtn.style.cursor = "not-allowed";
+
+                    openModal('payment-modal');
+
+                } else {
+                    alert(result.message || "아쉽습니다! 이미 다른 분이 선택한 좌석입니다.");
+                    loadSeats();
+                }
+            })
+            .catch(() => {
+                alert("좌석 선점 중 오류가 발생했습니다.");
+                loadSeats();
+            });
+    }
+
+    async function createReservation(concertId, seatId) {
+        const res = await fetch(`/api/concerts/${concertId}/seats/${seatId}/reservations`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+
+        if (res.status === 401) {
+            handle401Error();
+            return null;
+        }
+
+        return await res.json();
+    }
+
+    async function payReservation(reservationId) {
+        const res = await fetch(`/api/reservations/${reservationId}/payment`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+
+        const result = await res.json();
+
+        if (res.ok && result.status === "success") {
+            alert(result.message || "결제가 완료되었습니다.");
+        } else {
+            alert(result.message || "결제에 실패했습니다. (시간 초과)");
+            closeModal('payment-modal');
+            loadSeats();
+        }
+    }
+
+    async function failReservation(reservationId) {
+        const res = await fetch(`/api/reservations/${reservationId}/fail`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+
+        if (res.status === 401) {
+            handle401Error();
+            return null;
+        }
+
+        return await res.json();
+    }
+
+    function handle401Error() {
+        alert("🔒 세션이 만료되어 로그인이 해제되었습니다. 다시 로그인해 주세요!");
+        closeModal('seat-modal');
+        localStorage.removeItem("loginMemberName");
+        localStorage.removeItem("loginMemberRole");
+        checkLoginStatus();
+        showListPage();
+    }
+
+    function renderPagination(totalPages) {
+        const pageContainer = document.getElementById('pagination');
+        pageContainer.innerHTML = '';
+        if (totalPages <= 1) return;
+
+        const prevBtn = document.createElement('button');
+        prevBtn.className = 'page-btn'; prevBtn.innerText = '이전';
+        prevBtn.disabled = currentPage === 0; prevBtn.onclick = () => loadConcerts(currentPage - 1);
+        pageContainer.appendChild(prevBtn);
+
+        for (let i = 0; i < totalPages; i++) {
+            const btn = document.createElement('button');
+            btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+            btn.innerText = i + 1; btn.onclick = () => loadConcerts(i);
+            pageContainer.appendChild(btn);
+        }
+
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'page-btn'; nextBtn.innerText = '다음';
+        nextBtn.disabled = currentPage === totalPages - 1; nextBtn.onclick = () => loadConcerts(currentPage + 1);
+        pageContainer.appendChild(nextBtn);
+    }
+
+    async function proceedPayment() {
+        closeModal('payment-modal');
+        await payReservation(currentReservationId);
+        closeModal('seat-modal');
+        loadSeats();
+    }
+
+    async function cancelPayment() {
+        closeModal('payment-modal');
+        await failReservation(currentReservationId);
+        alert("결제가 취소되었습니다.");
+        closeModal('seat-modal');
+        loadSeats();
+    }
+
+    document.getElementById("refresh-seats-btn").onclick = loadSeats;
+    function togglePayButton() {
+        const isChecked = document.getElementById("agree-checkbox").checked;
+        document.getElementById("btn-pay-submit").disabled = !isChecked;
+    }
+
+    // 점 3개 팝업 메뉴 토글 함수
+    function toggleKebabMenu(event, concertId) {
+        event.stopPropagation(); // 카드 클릭(상세페이지 이동) 방지
+        const dropdown = document.getElementById(`dropdown-${concertId}`);
+
+        // 다른 열려있는 메뉴 닫기
+        document.querySelectorAll('.kebab-dropdown').forEach(el => {
+            if(el !== dropdown) el.classList.remove('show');
+        });
+        dropdown.classList.toggle('show');
+    }
+
+    // 실제 공연 삭제 호출 함수
+    function deleteConcertAction(event, concertId) {
+        event.stopPropagation(); // 카드 클릭 방지
+        if (!confirm("⚠️ 정말 이 공연을 삭제하시겠습니까? 연결된 좌석과 예매 내역이 모두 삭제됩니다.")) {
+            document.getElementById(`dropdown-${concertId}`).classList.remove('show');
+            return;
+        }
+
+        fetch(`/api/concerts/${concertId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        })
+            .then(async res => {
+                if (res.ok) {
+                    alert("공연이 성공적으로 삭제되었습니다.");
+                    loadConcerts(currentPage); // 새로고침 없이 해당 페이지 목록 갱신
+                } else {
+                    const errorText = await res.text();
+                    alert("삭제 실패: " + errorText);
+                }
+            })
+            .catch(err => {
+                console.error("삭제 중 에러:", err);
+                alert("서버와 통신 중 오류가 발생했습니다.");
+            });
+    }
+
+    // 빈 화면 클릭 시 열려있는 팝업 메뉴 모두 닫기
+    document.addEventListener('click', function() {
+        document.querySelectorAll('.kebab-dropdown').forEach(el => {
+            el.classList.remove('show');
+        });
+    });
+
+    // index.html 에 있는 수정 버튼 함수
+    function editConcertAction(concertId) {
+        fetch(`/api/concerts/${concertId}`)
+            .then(res => res.json())
+            .then(concert => {
+                // 데이터를 통째로 저장해서 넘깁니다.
+                localStorage.setItem("editConcertData", JSON.stringify(concert));
+                location.href = `/register.html?mode=edit&id=${concertId}`;
+            });
+    }
+</script>
 </body>
 </html>
